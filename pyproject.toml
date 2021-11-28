@@ -1,0 +1,55 @@
+[project]
+description = "A plugin for CPPython that enables vcpkg support for CMake projects"
+name = "cppython-vcpkg"
+
+license = "MIT"
+
+authors = [
+  "Synodic Software",
+]
+
+readme = "README.md"
+
+homepage = "https://github.com/Synodic-Software/CPPython-Vcpkg"
+repository = "https://github.com/Synodic-Software/CPPython-Vcpkg"
+
+dynamic = ["version"]
+
+requires-python = ">=3.10"
+
+dependencies = []
+[project.optional-dependencies]
+
+[tool.pdm]
+version = {use_scm = true}
+
+[tool.pdm.dev-dependencies]
+lint = [
+  "black<22,>=21.11b1",
+  "pylint~=2.12",
+]
+test = [
+  "pytest~=6.2",
+  "pytest-cov~=3.0",
+  "pytest-mock~=3.6",
+  "pytest-xdist~=2.4",
+]
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
+testpaths = [
+  "tests",
+]
+
+[tool.black]
+line-length = 120
+
+[tool.pylint.messages_control]
+disable = "C0330, C0326"
+
+[tool.pylint.format]
+max-line-length = "120"
+
+[build-system]
+build-backend = "pdm.pep517.api"
+requires = ["pdm-pep517"]
