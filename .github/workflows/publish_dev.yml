@@ -18,26 +18,31 @@ jobs:
   pypi_test_deployment:
 
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
 
     steps:
 
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-    - name: Install Poetry
-      uses: dschep/install-poetry-action@v1.2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: Install PDM
+      uses: pdm-project/setup-pdm@v2
+      with:
+        enable-pep582: true
 
     - name: Install Dependencies
-      run: poetry install
+      run: pdm install
 
     - name: Build
-      run: poetry build
+      run: pdm build -d dist
 
     - name: Publish
-      uses: pypa/gh-action-pypi-publish@v1.0.0a0
+      uses: pypa/gh-action-pypi-publish@v1
       with:
         user: __token__
-        password: ${{ secrets.TestPyPIToken }}
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/
