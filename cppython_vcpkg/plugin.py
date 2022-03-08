@@ -1,7 +1,15 @@
 """
 TODO
 """
-from cppython.schema import Generator
+from typing import Type
+
+from cppython.schema import Generator, GeneratorData
+
+
+class VcpkgData(GeneratorData):
+    """
+    TODO
+    """
 
 
 class VcpkgPlugin(Generator):
@@ -11,6 +19,14 @@ class VcpkgPlugin(Generator):
     Arguments:
         Generator {_type_} -- _description_
     """
+
+    @staticmethod
+    def name() -> str:
+        return "vcpkg"
+
+    @staticmethod
+    def data_type() -> Type[GeneratorData]:
+        return VcpkgData
 
     def downloaded(self) -> bool:
         """
