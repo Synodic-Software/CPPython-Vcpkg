@@ -17,34 +17,40 @@ dynamic = ["version"]
 
 requires-python = ">=3.10"
 
-dependencies = []
+dependencies = [
+  "cppython>=0.3.3",
+]
 
 [tool.pdm]
 version = {use_scm = true}
 
 [tool.pdm.dev-dependencies]
 lint = [
-  "black<22,>=21.11b1",
-  "pylint~=2.12",
+  "black>=22.1.0",
+  "pylint>=2.12.2",
+  "isort>=5.10.1",
 ]
 test = [
-  "pytest~=6.2",
-  "pytest-cov~=3.0",
-  "pytest-mock~=3.6",
-  "pytest-xdist~=2.4",
+  "pytest>=7.0.0",
+  "pytest-cov>=3.0.0",
+  "pytest-mock>=3.7.0",
 ]
 
 [tool.pytest.ini_options]
-addopts = "-n auto"
 testpaths = [
   "tests",
 ]
 
 [tool.black]
 line-length = 120
+preview = true
+
+[tool.isort]
+profile = "black"
 
 [tool.pylint.messages_control]
 disable = "C0330, C0326"
+extension-pkg-whitelist = "pydantic"
 
 [tool.pylint.format]
 max-line-length = "120"
