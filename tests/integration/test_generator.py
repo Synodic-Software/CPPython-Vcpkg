@@ -4,7 +4,7 @@ TODO
 import pytest
 from cppython.plugins.test.pytest import GeneratorIntegrationTests
 
-from cppython_vcpkg.plugin import VcpkgPlugin
+from cppython_vcpkg.plugin import VcpkgGenerator
 
 
 class TestCPPythonGenerator(GeneratorIntegrationTests):
@@ -13,8 +13,8 @@ class TestCPPythonGenerator(GeneratorIntegrationTests):
     """
 
     @pytest.fixture(name="generator")
-    def fixture_generator(self) -> VcpkgPlugin:
+    def fixture_generator(self) -> VcpkgGenerator:
         """
         Override of the plugin provided generator fixture.
         """
-        return VcpkgPlugin()
+        return VcpkgGenerator()

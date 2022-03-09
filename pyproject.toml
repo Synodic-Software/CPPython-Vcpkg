@@ -2,16 +2,13 @@
 description = "A plugin for CPPython that enables vcpkg support for CMake projects"
 name = "cppython-vcpkg"
 
-license = "MIT"
+license-expression = "MIT"
 
 authors = [
-  "Synodic Software",
+  {name = "Synodic Software", email = "contact@synodic.software"},
 ]
 
 readme = "README.md"
-
-homepage = "https://github.com/Synodic-Software/CPPython-Vcpkg"
-repository = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 
 dynamic = ["version"]
 
@@ -20,6 +17,13 @@ requires-python = ">=3.10"
 dependencies = [
   "cppython>=0.3.3",
 ]
+
+[project.license-files]
+paths = ["LICENSE.md"]
+
+[project.urls]
+homepage = "https://github.com/Synodic-Software/CPPython-Vcpkg"
+repository = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 
 [tool.pdm]
 version = {use_scm = true}
@@ -35,6 +39,10 @@ test = [
   "pytest-cov>=3.0.0",
   "pytest-mock>=3.7.0",
 ]
+
+# CPPython plugins
+[project.entry-points."cppython.generator_plugins"]
+cmake = "cppython_vcpkg.plugin:VcpkgGenerator"
 
 [tool.pytest.ini_options]
 testpaths = [

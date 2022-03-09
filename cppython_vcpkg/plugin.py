@@ -12,7 +12,7 @@ class VcpkgData(GeneratorData):
     """
 
 
-class VcpkgPlugin(Generator):
+class VcpkgGenerator(Generator):
     """
     _summary_
 
