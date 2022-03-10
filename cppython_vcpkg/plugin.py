@@ -1,20 +1,25 @@
 """
 TODO
 """
-from os import scandir
+import subprocess
+from os import name as system_name
 from pathlib import Path
 from typing import Type
 
 from cppython.schema import Generator, GeneratorData, PyProject
-from git import Git, Repo
 from pydantic.fields import Field
 
 
 def _default_install_location() -> Path:
-    """
-    TODO
-    """
-    return Path()
+
+    # TODO: Find sane default per platform
+    if system_name == "nt":
+        return Path()
+
+    if system_name == "posix":
+        return Path()
+
+    raise Exception
 
 
 class VcpkgData(GeneratorData):
@@ -41,6 +46,13 @@ class VcpkgGenerator(Generator):
 
         super().__init__(pyproject, generator_data)
 
+    def _update_generator(self):
+
+        if system_name == "nt":
+            subprocess.run([".\vcpkg\bootstrap-vcpkg.bat"], cwd=self.data.install_path, check=True)
+        elif system_name == "posix":
+            subprocess.run(["sh", "./vcpkg/bootstrap-vcpkg.sh"], cwd=self.data.install_path, check=True)
+
     @staticmethod
     def name() -> str:
         return "vcpkg"
@@ -50,21 +62,26 @@ class VcpkgGenerator(Generator):
         return VcpkgData
 
     def generator_downloaded(self) -> bool:
-        repository = Repo(self.data.install_path)
-        return not repository.bare
+        try:
+            subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=self.data.install_path, check=True)
+
+        except subprocess.CalledProcessError:
+            return False
+
+        return True
 
     def download_generator(self) -> None:
-
-        repository = Repo(self.data.install_path)
-
-        # Shallow clone
-        repository.clone("https://github.com/microsoft/vcpkg", filter=["tree:0", "blob:none"], sparse=True)
+        subprocess.run(
+            ["git", "clone", "-–depth", "1", "https://github.com/microsoft/vcpkg"],
+            cwd=self.data.install_path,
+            check=True,
+        )
+        self._update_generator()
 
     def update_generator(self) -> None:
-        repository = Repo(self.data.install_path)
-
-        remote = repository.remotes["origin"]
-        remote.pull()
+        subprocess.run(["git", "fetch", "origin", "-–depth", "1"], cwd=self.data.install_path, check=True)
+        subprocess.run(["git", "pull"], cwd=self.data.install_path, check=True)
+        self._update_generator()
 
     def install(self) -> None:
         """
