@@ -15,7 +15,8 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 
 dependencies = [
-    "cppython>=0.3.4"]
+  "cppython>=0.3.3",
+]
 
 [project.license-files]
 paths = ["LICENSE.md"]
