@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Type
 
 from cppython.schema import Generator, GeneratorData, PyProject
+from git import Git, Repo
 from pydantic.fields import Field
 
 
@@ -38,6 +39,8 @@ class VcpkgGenerator(Generator):
         """
         self.data = generator_data
 
+        super().__init__(pyproject, generator_data)
+
     @staticmethod
     def name() -> str:
         return "vcpkg"
@@ -47,28 +50,21 @@ class VcpkgGenerator(Generator):
         return VcpkgData
 
     def generator_downloaded(self) -> bool:
-        """
-        TODO
-        """
-        value = False
-        try:
-            if any(scandir(self.data.install_path)):
-                value = True
-        except NotADirectoryError:
-            pass
-        except FileNotFoundError:
-            pass
-        return value
+        repository = Repo(self.data.install_path)
+        return not repository.bare
 
     def download_generator(self) -> None:
-        """
-        TODO
-        """
+
+        repository = Repo(self.data.install_path)
+
+        # Shallow clone
+        repository.clone("https://github.com/microsoft/vcpkg", filter=["tree:0", "blob:none"], sparse=True)
 
     def update_generator(self) -> None:
-        """
-        TODO
-        """
+        repository = Repo(self.data.install_path)
+
+        remote = repository.remotes["origin"]
+        remote.pull()
 
     def install(self) -> None:
         """
