@@ -46,7 +46,7 @@ class VcpkgGenerator(Generator):
     def data_type() -> Type[GeneratorData]:
         return VcpkgData
 
-    def downloaded(self) -> bool:
+    def generator_downloaded(self) -> bool:
         """
         TODO
         """
@@ -60,7 +60,12 @@ class VcpkgGenerator(Generator):
             pass
         return value
 
-    def download(self) -> None:
+    def download_generator(self) -> None:
+        """
+        TODO
+        """
+
+    def update_generator(self) -> None:
         """
         TODO
         """
