@@ -2,9 +2,10 @@
 TODO
 """
 import pytest
+from cppython.plugins.test.data import default_pyproject
 from cppython.plugins.test.pytest import GeneratorIntegrationTests
 
-from cppython_vcpkg.plugin import VcpkgGenerator
+from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
 
 
 class TestCPPythonGenerator(GeneratorIntegrationTests):
@@ -17,4 +18,5 @@ class TestCPPythonGenerator(GeneratorIntegrationTests):
         """
         Override of the plugin provided generator fixture.
         """
-        return VcpkgGenerator()
+        vcpkg_data = VcpkgData()
+        return VcpkgGenerator(default_pyproject, vcpkg_data)

@@ -3,10 +3,11 @@ TODO
 """
 
 import pytest
+from cppython.plugins.test.data import default_pyproject
 from cppython.plugins.test.pytest import GeneratorUnitTests
 from pytest_mock import MockerFixture
 
-from cppython_vcpkg.plugin import VcpkgGenerator
+from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
 
 
 class TestCPPythonGenerator(GeneratorUnitTests):
@@ -20,7 +21,8 @@ class TestCPPythonGenerator(GeneratorUnitTests):
         Override of the plugin provided generator fixture.
         """
 
-        return VcpkgGenerator()
+        vcpkg_data = VcpkgData()
+        return VcpkgGenerator(default_pyproject, vcpkg_data)
 
     def test_install(self, generator: VcpkgGenerator, mocker: MockerFixture):
         """
