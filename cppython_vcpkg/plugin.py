@@ -1,15 +1,27 @@
 """
 TODO
 """
+from os import scandir
+from pathlib import Path
 from typing import Type
 
-from cppython.schema import Generator, GeneratorData
+from cppython.schema import Generator, GeneratorData, PyProject
+from pydantic.fields import Field
+
+
+def _default_install_location() -> Path:
+    """
+    TODO
+    """
+    return Path()
 
 
 class VcpkgData(GeneratorData):
     """
     TODO
     """
+
+    install_path: Path = Field(alias="install-path", default_factory=_default_install_location)
 
 
 class VcpkgGenerator(Generator):
@@ -19,6 +31,12 @@ class VcpkgGenerator(Generator):
     Arguments:
         Generator {_type_} -- _description_
     """
+
+    def __init__(self, pyproject: PyProject, generator_data: VcpkgData) -> None:
+        """
+        TODO
+        """
+        self.data = generator_data
 
     @staticmethod
     def name() -> str:
@@ -32,7 +50,15 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        return False
+        value = False
+        try:
+            if any(scandir(self.data.install_path)):
+                value = True
+        except NotADirectoryError:
+            pass
+        except FileNotFoundError:
+            pass
+        return value
 
     def download(self) -> None:
         """
