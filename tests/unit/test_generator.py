@@ -3,8 +3,8 @@ TODO
 """
 
 import pytest
-from cppython.plugins.test.data import default_pyproject
-from cppython.plugins.test.pytest import GeneratorUnitTests
+from cppython.data import default_pyproject
+from pytest_cppython.plugin import GeneratorUnitTests
 from pytest_mock import MockerFixture
 
 from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
