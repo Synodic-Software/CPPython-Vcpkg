@@ -6,7 +6,7 @@ from os import name as system_name
 from pathlib import Path
 from typing import Type
 
-from cppython.schema import Generator, GeneratorData, PyProject
+from cppython_core.schema import Generator, GeneratorData, PyProject
 from pydantic.fields import Field
 
 

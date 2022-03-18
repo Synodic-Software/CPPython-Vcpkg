@@ -2,8 +2,8 @@
 TODO
 """
 import pytest
-from cppython.plugins.test.data import default_pyproject
-from cppython.plugins.test.pytest import GeneratorIntegrationTests
+from cppython.data import default_pyproject
+from pytest_cppython.plugin import GeneratorIntegrationTests
 
 from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
 
