@@ -15,7 +15,7 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 
 dependencies = [
-  "cppython>=0.4.4",
+  "cppython>=0.5.0",
 ]
 
 [project.license-files]
@@ -30,8 +30,8 @@ version = {use_scm = true}
 
 [tool.pdm.dev-dependencies]
 lint = [
-  "black>=22.1.0",
-  "pylint>=2.12.2",
+  "black>=22.3.0",
+  "pylint>=2.13.5",
   "isort>=5.10.1",
 ]
 test = [
