@@ -44,7 +44,7 @@ class VcpkgGenerator(Generator):
         """
         self.data = generator_data
 
-        super().__init__(pyproject, generator_data)
+        super().__init__(pyproject)
 
     def _update_generator(self):
 
