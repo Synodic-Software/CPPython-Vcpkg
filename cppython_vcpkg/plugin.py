@@ -4,9 +4,9 @@ TODO
 import subprocess
 from os import name as system_name
 from pathlib import Path
-from typing import Type, TypeVar
+from typing import Type
 
-from cppython_core.schema import Generator, GeneratorData, PyProject
+from cppython_core.schema import Generator, GeneratorData
 from pydantic.fields import Field
 
 
