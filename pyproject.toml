@@ -15,7 +15,7 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 
 dependencies = [
-  "cppython-core>=0.2.1",
+  "cppython-core>=0.3.2",
 ]
 
 [project.license-files]
@@ -38,7 +38,7 @@ test = [
   "pytest>=7.0.0",
   "pytest-cov>=3.0.0",
   "pytest-mock>=3.7.0",
-  "pytest-cppython>=0.1.4",
+  "pytest-cppython>=0.1.6",
 ]
 
 # CPPython plugins

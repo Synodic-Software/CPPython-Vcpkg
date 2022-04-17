@@ -1,8 +1,11 @@
 """
 TODO
 """
+import logging
+
 import pytest
 from cppython.data import default_pyproject
+from cppython_core.schema import GeneratorConfiguration
 from pytest_cppython.plugin import GeneratorIntegrationTests
 
 from cppython_vcpkg.plugin import VcpkgGenerator
@@ -18,4 +21,5 @@ class TestCPPythonGenerator(GeneratorIntegrationTests):
         """
         Override of the plugin provided generator fixture.
         """
-        return VcpkgGenerator(default_pyproject)
+        configuration = GeneratorConfiguration(logging.getLogger(__name__))
+        return VcpkgGenerator(configuration, default_pyproject)
