@@ -2,6 +2,7 @@
 TODO
 """
 import subprocess
+from os import environ
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Type
@@ -41,6 +42,8 @@ class VcpkgGenerator(Generator):
                 subprocess.check_output(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
         except subprocess.CalledProcessError as error:
             print(error.output)
+
+        environ["VCPKG_ROOT"] = str(path)
 
     @staticmethod
     def name() -> str:
