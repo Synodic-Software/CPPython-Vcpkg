@@ -55,8 +55,7 @@ class VcpkgGenerator(Generator):
         try:
             subprocess.check_output(["git", "rev-parse", "--is-inside-work-tree"], cwd=path)
 
-        except subprocess.CalledProcessError as error:
-            print(error.output)
+        except subprocess.CalledProcessError:
             return False
 
         return True
