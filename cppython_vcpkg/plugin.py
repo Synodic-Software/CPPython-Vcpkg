@@ -7,7 +7,12 @@ from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Type
 
-from cppython_core.schema import Generator, GeneratorData
+from cppython_core.schema import (
+    Generator,
+    GeneratorConfiguration,
+    GeneratorData,
+    PyProject,
+)
 
 
 class VcpkgData(GeneratorData):
@@ -24,13 +29,11 @@ class VcpkgGenerator(Generator):
         Generator {_type_} -- _description_
     """
 
-    def __init__(self, pyproject) -> None:
+    def __init__(self, configuration: GeneratorConfiguration, pyproject: PyProject) -> None:
         """
         TODO
         """
-        self.data = pyproject
-
-        super().__init__(pyproject)
+        super().__init__(configuration, pyproject)
 
     def _update_generator(self, path: Path):
 
