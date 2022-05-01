@@ -15,7 +15,7 @@ dynamic = ["version"]
 requires-python = ">=3.10"
 
 dependencies = [
-  "cppython-core>=0.3.2",
+  "cppython-core>=0.3.3.dev0",
 ]
 
 [project.license-files]
@@ -25,20 +25,21 @@ paths = ["LICENSE.md"]
 homepage = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 repository = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 
+[project.optional-dependencies]
 [tool.pdm]
 version = {use_scm = true}
 
 [tool.pdm.dev-dependencies]
 lint = [
   "black>=22.3.0",
-  "pylint>=2.13.5",
+  "pylint>=2.13.7",
   "isort>=5.10.1",
 ]
 test = [
-  "pytest>=7.0.0",
+  "pytest>=7.1.2",
   "pytest-cov>=3.0.0",
   "pytest-mock>=3.7.0",
-  "pytest-cppython>=0.1.6",
+  "pytest-cppython>=0.1.7.dev0",
 ]
 
 # CPPython plugins
