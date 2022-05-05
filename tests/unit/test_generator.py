@@ -1,8 +1,6 @@
 """
 TODO
 """
-import logging
-
 import pytest
 from cppython_core.schema import (
     PEP621,
@@ -33,7 +31,7 @@ class TestCPPythonGenerator(GeneratorUnitTests):
         """
         Override of the plugin provided generator fixture.
         """
-        configuration = GeneratorConfiguration(logging.getLogger(__name__))
+        configuration = GeneratorConfiguration()
         return VcpkgGenerator(configuration, default_pyproject)
 
     def test_install(self, generator: VcpkgGenerator, mocker: MockerFixture):

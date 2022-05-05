@@ -32,7 +32,7 @@ version = {use_scm = true}
 [tool.pdm.dev-dependencies]
 lint = [
   "black>=22.3.0",
-  "pylint>=2.13.7",
+  "pylint>=2.13.8",
   "isort>=5.10.1",
 ]
 test = [
@@ -43,7 +43,7 @@ test = [
 ]
 
 # CPPython plugins
-[project.entry-points."cppython.generator_plugins"]
+[project.entry-points."cppython.generator"]
 cmake = "cppython_vcpkg.plugin:VcpkgGenerator"
 
 [tool.pytest.ini_options]
