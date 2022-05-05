@@ -43,7 +43,7 @@ test = [
 ]
 
 # CPPython plugins
-[project.entry-points."cppython.generator_plugins"]
+[project.entry-points."cppython.generator"]
 cmake = "cppython_vcpkg.plugin:VcpkgGenerator"
 
 [tool.pytest.ini_options]
