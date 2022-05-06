@@ -43,10 +43,12 @@ class VcpkgGenerator(Generator):
                 subprocess.check_output([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
             elif system_name == "posix":
                 subprocess.check_output(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
-        except subprocess.CalledProcessError as error:
-            print(error.output)
+        except subprocess.CalledProcessError:
+            self.logger.error("Unable to boostrap the vcpkg repository", exc_info=True)
 
-        environ["VCPKG_ROOT"] = str(path)
+        environment_var = "VCPKG_ROOT"
+        self.logger.info("Setting environment variable '{environment_var}' to '{path}'")
+        environ[environment_var] = str(path)
 
     @staticmethod
     def name() -> str:
@@ -74,8 +76,8 @@ class VcpkgGenerator(Generator):
                 cwd=path,
             )
 
-        except subprocess.CalledProcessError as error:
-            print(error.output)
+        except subprocess.CalledProcessError:
+            self.logger.error("Unable to clone the vcpkg repository", exc_info=True)
 
         self._update_generator(path)
 
@@ -83,8 +85,8 @@ class VcpkgGenerator(Generator):
         try:
             subprocess.check_output(["git", "fetch", "origin", "--depth", "1"], cwd=path)
             subprocess.check_output(["git", "pull"], cwd=path)
-        except subprocess.CalledProcessError as error:
-            print(error.output)
+        except subprocess.CalledProcessError:
+            self.logger.error("Unable to update the vcpkg repository", exc_info=True)
 
         self._update_generator(path)
 
