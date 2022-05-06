@@ -47,7 +47,7 @@ class VcpkgGenerator(Generator):
             self.logger.error("Unable to boostrap the vcpkg repository", exc_info=True)
 
         environment_var = "VCPKG_ROOT"
-        self.logger.info("Setting environment variable '{environment_var}' to '{path}'")
+        self.logger.info(f"Setting environment variable '{environment_var}' to '{path}'")
         environ[environment_var] = str(path)
 
     @staticmethod
