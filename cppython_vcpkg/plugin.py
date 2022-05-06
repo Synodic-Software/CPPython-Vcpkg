@@ -39,12 +39,14 @@ class VcpkgGenerator(Generator):
 
         # TODO: Identify why Shell is needed and refactor
         try:
+            # TODO: Pipe output to logger
             if system_name == "nt":
                 subprocess.check_output([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
             elif system_name == "posix":
                 subprocess.check_output(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
         except subprocess.CalledProcessError:
-            self.logger.error("Unable to boostrap the vcpkg repository", exc_info=True)
+            self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
+            raise
 
         environment_var = "VCPKG_ROOT"
         self.logger.info(f"Setting environment variable '{environment_var}' to '{path}'")
@@ -61,7 +63,14 @@ class VcpkgGenerator(Generator):
     def generator_downloaded(self, path: Path) -> bool:
 
         try:
-            subprocess.check_output(["git", "rev-parse", "--is-inside-work-tree"], cwd=path)
+            # Hide output, given an error output is a logic conditional
+            subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+                cwd=path,
+            )
 
         except subprocess.CalledProcessError:
             return False
@@ -71,6 +80,7 @@ class VcpkgGenerator(Generator):
     def download_generator(self, path: Path) -> None:
 
         try:
+            # TODO: Pipe output to logger
             subprocess.check_output(
                 ["git", "clone", "--depth", "1", "https://github.com/microsoft/vcpkg", "."],
                 cwd=path,
@@ -78,15 +88,18 @@ class VcpkgGenerator(Generator):
 
         except subprocess.CalledProcessError:
             self.logger.error("Unable to clone the vcpkg repository", exc_info=True)
+            raise
 
         self._update_generator(path)
 
     def update_generator(self, path: Path) -> None:
         try:
+            # TODO: Pipe output to logger
             subprocess.check_output(["git", "fetch", "origin", "--depth", "1"], cwd=path)
             subprocess.check_output(["git", "pull"], cwd=path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to update the vcpkg repository", exc_info=True)
+            raise
 
         self._update_generator(path)
 
