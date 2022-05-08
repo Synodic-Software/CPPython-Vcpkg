@@ -1,8 +1,8 @@
 """
 TODO
 """
-import os
 import subprocess
+from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Type
 
@@ -39,17 +39,13 @@ class VcpkgGenerator(Generator):
         # TODO: Identify why Shell is needed and refactor
         try:
             # TODO: Pipe output to logger
-            if os.name == "nt":
+            if system_name == "nt":
                 subprocess.check_output([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
-            elif os.name == "posix":
+            elif system_name == "posix":
                 subprocess.check_output(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
-
-        environment_var = "VCPKG_ROOT"
-        self.logger.info(f"Setting environment variable '{environment_var}' to '{path}'")
-        os.environ[environment_var] = str(path)
 
     @staticmethod
     def name() -> str:
