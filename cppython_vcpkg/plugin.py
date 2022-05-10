@@ -102,12 +102,12 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        tool_path = self.pyproject.tool.cppython.tool_path
-        return tool_path / "scripts/buildsystems/vcpkg.cmake"
+        vcpkg_path = self.pyproject.tool.cppython.install_path / self.name()
+        return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
 
     def update(self) -> Path:
         """
         TODO
         """
-        tool_path = self.pyproject.tool.cppython.tool_path
-        return tool_path / "scripts/buildsystems/vcpkg.cmake"
+        vcpkg_path = self.pyproject.tool.cppython.install_path / self.name()
+        return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
