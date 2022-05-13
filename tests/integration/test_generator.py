@@ -31,4 +31,4 @@ class TestCPPythonGenerator(GeneratorIntegrationTests):
         Override of the plugin provided generator fixture.
         """
         configuration = GeneratorConfiguration()
-        return VcpkgGenerator(configuration, default_pyproject)
+        return VcpkgGenerator(configuration, default_pep621, default_cppython_data)

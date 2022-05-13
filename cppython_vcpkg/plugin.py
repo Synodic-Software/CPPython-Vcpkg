@@ -7,6 +7,8 @@ from pathlib import Path, PosixPath, WindowsPath
 from typing import Type
 
 from cppython_core.schema import (
+    PEP621,
+    CPPythonData,
     Generator,
     GeneratorConfiguration,
     GeneratorData,
@@ -28,11 +30,11 @@ class VcpkgGenerator(Generator):
         Generator {_type_} -- _description_
     """
 
-    def __init__(self, configuration: GeneratorConfiguration, pyproject: PyProject) -> None:
+    def __init__(self, configuration: GeneratorConfiguration, project: PEP621, cppython: CPPythonData) -> None:
         """
         TODO
         """
-        super().__init__(configuration, pyproject)
+        super().__init__(configuration, project, cppython)
 
     def _update_generator(self, path: Path):
 
@@ -102,12 +104,12 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        vcpkg_path = self.pyproject.tool.cppython.install_path / self.name()
+        vcpkg_path = self.cppython.install_path / self.name()
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
 
     def update(self) -> Path:
         """
         TODO
         """
-        vcpkg_path = self.pyproject.tool.cppython.install_path / self.name()
+        vcpkg_path = self.cppython.install_path / self.name()
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"

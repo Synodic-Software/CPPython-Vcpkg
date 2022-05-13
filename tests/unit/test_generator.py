@@ -32,7 +32,7 @@ class TestCPPythonGenerator(GeneratorUnitTests):
         Override of the plugin provided generator fixture.
         """
         configuration = GeneratorConfiguration()
-        return VcpkgGenerator(configuration, default_pyproject)
+        return VcpkgGenerator(configuration, default_pep621, default_cppython_data)
 
     def test_install(self, generator: VcpkgGenerator, mocker: MockerFixture):
         """
