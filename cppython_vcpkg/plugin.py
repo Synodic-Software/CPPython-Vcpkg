@@ -105,6 +105,14 @@ class VcpkgGenerator(Generator):
         TODO
         """
         vcpkg_path = self.cppython.install_path / self.name()
+
+        try:
+            # TODO: Pipe output to logger
+            subprocess.check_output(["vcpkg", "install"], cwd=vcpkg_path)
+        except subprocess.CalledProcessError:
+            self.logger.error("Unable to install project dependencies", exc_info=True)
+            raise
+
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
 
     def update(self) -> Path:
