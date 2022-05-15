@@ -104,11 +104,11 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        vcpkg_path = self.cppython.install_path / self.name()
+        vcpkg_path = self.cppython.install_path / self.name() / "vcpkg"
 
         try:
             # TODO: Pipe output to logger
-            subprocess.check_output(["vcpkg", "install"], cwd=vcpkg_path)
+            subprocess.check_output([vcpkg_path, "install"], cwd=self.cppython.build_path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
