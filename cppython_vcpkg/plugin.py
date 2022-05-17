@@ -12,8 +12,8 @@ from cppython_core.schema import (
     Generator,
     GeneratorConfiguration,
     GeneratorData,
-    PyProject,
 )
+from cppython_core.utility import subprocess_call
 
 
 class VcpkgData(GeneratorData):
@@ -42,9 +42,9 @@ class VcpkgGenerator(Generator):
         try:
             # TODO: Pipe output to logger
             if system_name == "nt":
-                subprocess.check_output([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess.check_output(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
+                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
@@ -61,11 +61,9 @@ class VcpkgGenerator(Generator):
 
         try:
             # Hide output, given an error output is a logic conditional
-            subprocess.run(
+            subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=True,
+                suppress=True,
                 cwd=path,
             )
 
@@ -78,8 +76,9 @@ class VcpkgGenerator(Generator):
 
         try:
             # TODO: Pipe output to logger
-            subprocess.check_output(
-                ["git", "clone", "--depth", "1", "https://github.com/microsoft/vcpkg", "."],
+            # The entire history is need for vcpkg 'baseline' information
+            subprocess_call(
+                ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
                 cwd=path,
             )
 
@@ -92,8 +91,9 @@ class VcpkgGenerator(Generator):
     def update_generator(self, path: Path) -> None:
         try:
             # TODO: Pipe output to logger
-            subprocess.check_output(["git", "fetch", "origin", "--depth", "1"], cwd=path)
-            subprocess.check_output(["git", "pull"], cwd=path)
+            # The entire history is need for vcpkg 'baseline' information
+            subprocess_call(["git", "fetch", "origin"], cwd=path)
+            subprocess_call(["git", "pull"], cwd=path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to update the vcpkg repository", exc_info=True)
             raise
@@ -108,7 +108,7 @@ class VcpkgGenerator(Generator):
 
         try:
             # TODO: Pipe output to logger
-            subprocess.check_output([vcpkg_path, "install"], cwd=self.cppython.build_path)
+            subprocess_call([vcpkg_path, "install"], cwd=self.cppython.build_path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
