@@ -64,7 +64,6 @@ class VcpkgGenerator(Generator):
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
                 suppress=True,
-                check=True,
                 cwd=path,
             )
 
