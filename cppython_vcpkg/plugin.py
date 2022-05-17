@@ -78,8 +78,9 @@ class VcpkgGenerator(Generator):
 
         try:
             # TODO: Pipe output to logger
+            # The entire history is need for vcpkg 'baseline' information
             subprocess.check_output(
-                ["git", "clone", "--depth", "1", "https://github.com/microsoft/vcpkg", "."],
+                ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
                 cwd=path,
             )
 
@@ -92,7 +93,8 @@ class VcpkgGenerator(Generator):
     def update_generator(self, path: Path) -> None:
         try:
             # TODO: Pipe output to logger
-            subprocess.check_output(["git", "fetch", "origin", "--depth", "1"], cwd=path)
+            # The entire history is need for vcpkg 'baseline' information
+            subprocess.check_output(["git", "fetch", "origin"], cwd=path)
             subprocess.check_output(["git", "pull"], cwd=path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to update the vcpkg repository", exc_info=True)
