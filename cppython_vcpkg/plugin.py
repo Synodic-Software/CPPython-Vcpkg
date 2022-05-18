@@ -40,7 +40,6 @@ class VcpkgGenerator(Generator):
 
         # TODO: Identify why Shell is needed and refactor
         try:
-            # TODO: Pipe output to logger
             if system_name == "nt":
                 subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
             elif system_name == "posix":
@@ -75,7 +74,6 @@ class VcpkgGenerator(Generator):
     def download_generator(self, path: Path) -> None:
 
         try:
-            # TODO: Pipe output to logger
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(
                 ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
@@ -90,7 +88,6 @@ class VcpkgGenerator(Generator):
 
     def update_generator(self, path: Path) -> None:
         try:
-            # TODO: Pipe output to logger
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(["git", "fetch", "origin"], cwd=path)
             subprocess_call(["git", "pull"], cwd=path)
@@ -104,11 +101,12 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        vcpkg_path = self.cppython.install_path / self.name() / "vcpkg"
+        vcpkg_path = self.cppython.install_path / self.name()
+
+        executable = vcpkg_path / "vcpkg"
 
         try:
-            # TODO: Pipe output to logger
-            subprocess_call([vcpkg_path, "install"], cwd=self.cppython.build_path)
+            subprocess_call([executable, "install"], cwd=self.cppython.build_path)
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
