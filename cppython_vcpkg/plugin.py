@@ -14,12 +14,18 @@ from cppython_core.schema import (
     GeneratorData,
 )
 from cppython_core.utility import subprocess_call
+from pydantic import Field
 
 
 class VcpkgData(GeneratorData):
     """
     TODO
     """
+
+    # TODO: Make relative to CPPython:install_path
+    install_path: Path = Field(
+        default="build", description="The referenced dependencies defined by the local vcpkg.json manifest file"
+    )
 
 
 class VcpkgGenerator(Generator):
@@ -106,7 +112,10 @@ class VcpkgGenerator(Generator):
         executable = vcpkg_path / "vcpkg"
 
         try:
-            subprocess_call([executable, "install"], cwd=self.cppython.build_path)
+            subprocess_call(
+                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                cwd=self.cppython.build_path,
+            )
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
@@ -122,7 +131,10 @@ class VcpkgGenerator(Generator):
         executable = vcpkg_path / "vcpkg"
 
         try:
-            subprocess_call([executable, "install"], cwd=self.cppython.build_path)
+            subprocess_call(
+                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                cwd=self.cppython.build_path,
+            )
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
