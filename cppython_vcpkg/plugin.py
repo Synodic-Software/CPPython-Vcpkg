@@ -1,10 +1,11 @@
 """
 TODO
 """
+import json
 import subprocess
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Type
+from typing import Optional, Type
 
 from cppython_core.schema import (
     PEP621,
@@ -47,7 +48,7 @@ class Manifest(BaseModel):
 
     # TODO: Support other version types
     version: str
-    homepage: HttpUrl
+    homepage: Optional[HttpUrl]
     dependencies: list[VcpkgDependency] = []
 
 
@@ -76,6 +77,20 @@ class VcpkgGenerator(Generator):
         except subprocess.CalledProcessError:
             self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
+
+    def _extract_manifest(self) -> Manifest:
+        """
+        TODO
+        """
+        base_dependencies = self.cppython.dependencies
+
+        vcpkg_dependencies = []
+        for dependency in base_dependencies:
+            vcpkg_dependency = VcpkgDependency(name=dependency.name)
+            vcpkg_dependencies.append(vcpkg_dependency)
+
+        # Create the manifest
+        return Manifest(name=self.project.name, version=self.project.version, dependencies=vcpkg_dependencies)
 
     @staticmethod
     def name() -> str:
@@ -130,6 +145,14 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
+        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest = self._extract_manifest()
+
+        # Write out the manifest
+        serialized = json.loads(manifest.json())
+        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+            json.dump(serialized, file, ensure_ascii=False, indent=4)
+
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
@@ -148,14 +171,20 @@ class VcpkgGenerator(Generator):
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
-        # Write out the manifest
-        # TODO
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
 
     def update(self) -> Path:
         """
         TODO
         """
+        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest = self._extract_manifest()
+
+        # Write out the manifest
+        serialized = json.loads(manifest.json())
+        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+            json.dump(serialized, file, ensure_ascii=False, indent=4)
+
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
@@ -173,8 +202,5 @@ class VcpkgGenerator(Generator):
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
-
-            # Write out the manifest
-        # TODO
 
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
