@@ -1,10 +1,11 @@
 """
 TODO
 """
+import json
 import subprocess
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Type
+from typing import Optional, Type
 
 from cppython_core.schema import (
     PEP621,
@@ -14,7 +15,7 @@ from cppython_core.schema import (
     GeneratorData,
 )
 from cppython_core.utility import subprocess_call
-from pydantic import Field
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class VcpkgData(GeneratorData):
@@ -22,10 +23,33 @@ class VcpkgData(GeneratorData):
     TODO
     """
 
-    # TODO: Make relative to CPPython:install_path
+    # TODO: Make relative to CPPython:build_path
     install_path: Path = Field(
         default="build", description="The referenced dependencies defined by the local vcpkg.json manifest file"
     )
+
+    manifest_path: Path = Field(default="", description="The directory to store the manifest file, vcpkg.json")
+
+
+class VcpkgDependency(BaseModel):
+    """
+    Vcpkg dependency type
+    """
+
+    name: str
+
+
+class Manifest(BaseModel):
+    """
+    The manifest schema
+    """
+
+    name: str
+
+    # TODO: Support other version types
+    version: str
+    homepage: Optional[HttpUrl]
+    dependencies: list[VcpkgDependency] = []
 
 
 class VcpkgGenerator(Generator):
@@ -53,6 +77,20 @@ class VcpkgGenerator(Generator):
         except subprocess.CalledProcessError:
             self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
+
+    def _extract_manifest(self) -> Manifest:
+        """
+        TODO
+        """
+        base_dependencies = self.cppython.dependencies
+
+        vcpkg_dependencies = []
+        for dependency in base_dependencies:
+            vcpkg_dependency = VcpkgDependency(name=dependency.name)
+            vcpkg_dependencies.append(vcpkg_dependency)
+
+        # Create the manifest
+        return Manifest(name=self.project.name, version=self.project.version, dependencies=vcpkg_dependencies)
 
     @staticmethod
     def name() -> str:
@@ -107,13 +145,26 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
+        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest = self._extract_manifest()
+
+        # Write out the manifest
+        serialized = json.loads(manifest.json())
+        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+            json.dump(serialized, file, ensure_ascii=False, indent=4)
+
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
 
         try:
             subprocess_call(
-                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                [
+                    executable,
+                    "install",
+                    f"--x-install-root={self.cppython.vcpkg.install_path}",
+                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                ],
                 cwd=self.cppython.build_path,
             )
         except subprocess.CalledProcessError:
@@ -126,13 +177,26 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
+        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest = self._extract_manifest()
+
+        # Write out the manifest
+        serialized = json.loads(manifest.json())
+        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+            json.dump(serialized, file, ensure_ascii=False, indent=4)
+
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
 
         try:
             subprocess_call(
-                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                [
+                    executable,
+                    "install",
+                    f"--x-install-root={self.cppython.vcpkg.install_path}",
+                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                ],
                 cwd=self.cppython.build_path,
             )
         except subprocess.CalledProcessError:
