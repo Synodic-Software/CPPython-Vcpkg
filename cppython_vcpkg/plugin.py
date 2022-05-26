@@ -14,7 +14,7 @@ from cppython_core.schema import (
     GeneratorData,
 )
 from cppython_core.utility import subprocess_call
-from pydantic import Field
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class VcpkgData(GeneratorData):
@@ -22,10 +22,33 @@ class VcpkgData(GeneratorData):
     TODO
     """
 
-    # TODO: Make relative to CPPython:install_path
+    # TODO: Make relative to CPPython:build_path
     install_path: Path = Field(
         default="build", description="The referenced dependencies defined by the local vcpkg.json manifest file"
     )
+
+    manifest_path: Path = Field(default="", description="The directory to store the manifest file, vcpkg.json")
+
+
+class VcpkgDependency(BaseModel):
+    """
+    Vcpkg dependency type
+    """
+
+    name: str
+
+
+class Manifest(BaseModel):
+    """
+    The manifest schema
+    """
+
+    name: str
+
+    # TODO: Support other version types
+    version: str
+    homepage: HttpUrl
+    dependencies: list[VcpkgDependency] = []
 
 
 class VcpkgGenerator(Generator):
@@ -113,13 +136,20 @@ class VcpkgGenerator(Generator):
 
         try:
             subprocess_call(
-                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                [
+                    executable,
+                    "install",
+                    f"--x-install-root={self.cppython.vcpkg.install_path}",
+                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                ],
                 cwd=self.cppython.build_path,
             )
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
+        # Write out the manifest
+        # TODO
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
 
     def update(self) -> Path:
@@ -132,11 +162,19 @@ class VcpkgGenerator(Generator):
 
         try:
             subprocess_call(
-                [executable, "install", f"--x-install-root={self.cppython.vcpkg.install_path}"],
+                [
+                    executable,
+                    "install",
+                    f"--x-install-root={self.cppython.vcpkg.install_path}",
+                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                ],
                 cwd=self.cppython.build_path,
             )
         except subprocess.CalledProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
+
+            # Write out the manifest
+        # TODO
 
         return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
