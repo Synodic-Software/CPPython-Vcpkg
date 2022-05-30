@@ -160,7 +160,7 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest_path = self.generator.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -177,8 +177,8 @@ class VcpkgGenerator(Generator):
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.cppython.vcpkg.install_path}",
-                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                    f"--x-install-root={self.generator.install_path}",
+                    f"--x-manifest-root={self.generator.manifest_path}",
                 ],
                 cwd=self.cppython.build_path,
             )
@@ -192,7 +192,7 @@ class VcpkgGenerator(Generator):
         """
         TODO
         """
-        manifest_path = self.cppython.vcpkg.manifest_path
+        manifest_path = self.generator.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -209,8 +209,8 @@ class VcpkgGenerator(Generator):
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.cppython.vcpkg.install_path}",
-                    f"--x-manifest-root={self.cppython.vcpkg.manifest_path}",
+                    f"--x-install-root={self.generator.install_path}",
+                    f"--x-manifest-root={self.generator.manifest_path}",
                 ],
                 cwd=self.cppython.build_path,
             )
