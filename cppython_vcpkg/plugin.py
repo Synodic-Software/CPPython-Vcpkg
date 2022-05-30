@@ -25,10 +25,10 @@ class VcpkgData(GeneratorData):
 
     # TODO: Make relative to CPPython:build_path
     install_path: Path = Field(
-        default="build", description="The referenced dependencies defined by the local vcpkg.json manifest file"
+        default=Path("build"), description="The referenced dependencies defined by the local vcpkg.json manifest file"
     )
 
-    manifest_path: Path = Field(default="", description="The directory to store the manifest file, vcpkg.json")
+    manifest_path: Path = Field(default=Path(), description="The directory to store the manifest file, vcpkg.json")
 
 
 class VcpkgDependency(BaseModel):
@@ -60,11 +60,26 @@ class VcpkgGenerator(Generator):
         Generator {_type_} -- _description_
     """
 
-    def __init__(self, configuration: GeneratorConfiguration, project: PEP621, cppython: CPPythonData) -> None:
+    def __init__(
+        self, configuration: GeneratorConfiguration, project: PEP621, cppython: CPPythonData, generator: VcpkgData
+    ) -> None:
         """
         TODO
         """
-        super().__init__(configuration, project, cppython)
+
+        # Modify the vcpkg settings before sending it the base class to resolve dynamic modifications
+
+        modified_generator = generator.copy(deep=True)
+
+        # Resolve relative paths
+
+        if not modified_generator.install_path.is_absolute():
+            modified_generator.install_path = configuration.root_path.absolute() / modified_generator.install_path
+
+        if not modified_generator.manifest_path.is_absolute():
+            modified_generator.manifest_path = configuration.root_path.absolute() / modified_generator.manifest_path
+
+        super().__init__(configuration, project, cppython, modified_generator)
 
     def _update_generator(self, path: Path):
 
