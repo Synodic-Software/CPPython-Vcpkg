@@ -164,7 +164,7 @@ class VcpkgGenerator(Generator):
         manifest = self._extract_manifest()
 
         # Write out the manifest
-        serialized = json.loads(manifest.json())
+        serialized = json.loads(manifest.json(exclude_none=True))
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
@@ -196,7 +196,7 @@ class VcpkgGenerator(Generator):
         manifest = self._extract_manifest()
 
         # Write out the manifest
-        serialized = json.loads(manifest.json())
+        serialized = json.loads(manifest.json(exclude_none=True))
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
