@@ -25,10 +25,14 @@ class VcpkgData(GeneratorData):
 
     # TODO: Make relative to CPPython:build_path
     install_path: Path = Field(
-        default=Path("build"), description="The referenced dependencies defined by the local vcpkg.json manifest file"
+        default=Path("build"),
+        alias="install-path",
+        description="The referenced dependencies defined by the local vcpkg.json manifest file",
     )
 
-    manifest_path: Path = Field(default=Path(), description="The directory to store the manifest file, vcpkg.json")
+    manifest_path: Path = Field(
+        default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
+    )
 
 
 class VcpkgDependency(BaseModel):
