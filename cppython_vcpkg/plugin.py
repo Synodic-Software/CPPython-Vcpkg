@@ -161,7 +161,7 @@ class VcpkgGenerator(Generator):
 
         self._update_generator(path)
 
-    def install(self) -> Path:
+    def install(self) -> None:
         """
         TODO
         """
@@ -191,7 +191,7 @@ class VcpkgGenerator(Generator):
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
-    def update(self) -> Path:
+    def update(self) -> None:
         """
         TODO
         """
