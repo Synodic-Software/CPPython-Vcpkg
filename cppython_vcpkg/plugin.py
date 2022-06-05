@@ -9,6 +9,7 @@ from typing import Optional, Type
 
 from cppython_core.schema import (
     PEP621,
+    ConfigurePreset,
     CPPythonData,
     Generator,
     GeneratorConfiguration,
@@ -190,8 +191,6 @@ class VcpkgGenerator(Generator):
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
-        return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
-
     def update(self) -> Path:
         """
         TODO
@@ -222,4 +221,10 @@ class VcpkgGenerator(Generator):
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
-        return vcpkg_path / "scripts/buildsystems/vcpkg.cmake"
+    def generate_cmake_config(self) -> ConfigurePreset:
+
+        toolchainFile = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
+
+        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=toolchainFile)
+
+        return configure_preset
