@@ -11,12 +11,13 @@ from cppython_core.schema import (
     PEP621,
     ConfigurePreset,
     CPPythonData,
+    CPPythonModel,
     Generator,
     GeneratorConfiguration,
     GeneratorData,
 )
 from cppython_core.utility import subprocess_call
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import Field, HttpUrl
 
 
 class VcpkgData(GeneratorData):
@@ -36,7 +37,7 @@ class VcpkgData(GeneratorData):
     )
 
 
-class VcpkgDependency(BaseModel):
+class VcpkgDependency(CPPythonModel):
     """
     Vcpkg dependency type
     """
@@ -44,7 +45,7 @@ class VcpkgDependency(BaseModel):
     name: str
 
 
-class Manifest(BaseModel):
+class Manifest(CPPythonModel):
     """
     The manifest schema
     """
@@ -53,8 +54,8 @@ class Manifest(BaseModel):
 
     # TODO: Support other version types
     version: str
-    homepage: Optional[HttpUrl]
-    dependencies: list[VcpkgDependency] = []
+    homepage: Optional[HttpUrl] = Field(default=None)
+    dependencies: list[VcpkgDependency] = Field(default=[])
 
 
 class VcpkgGenerator(Generator):
@@ -225,6 +226,6 @@ class VcpkgGenerator(Generator):
 
         toolchainFile = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
 
-        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=toolchainFile)
+        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchainFile))
 
         return configure_preset

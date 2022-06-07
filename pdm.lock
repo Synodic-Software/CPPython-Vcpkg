@@ -68,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "cppython-core"
-version = "0.4.1.dev1"
+version = "0.4.1.dev7"
 requires_python = ">=3.10"
 summary = "Data definitions for CPPython"
 dependencies = [
@@ -153,7 +153,7 @@ dependencies = [
 
 [[package]]
 name = "pylint"
-version = "2.14.0"
+version = "2.14.1"
 requires_python = ">=3.7.2"
 summary = "python code static checker"
 dependencies = [
@@ -201,7 +201,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-cppython"
-version = "0.2.0"
+version = "0.2.1.dev1"
 requires_python = ">=3.10"
 summary = "A pytest plugin that imports CPPython testing types"
 dependencies = [
@@ -341,9 +341,9 @@ content_hash = "sha256:765a5d1e62fb9ab053cf3ea382251157eabbde54c2951a2536787be60
     {file = "coverage-6.4-pp36.pp37.pp38-none-any.whl", hash = "sha256:e637ae0b7b481905358624ef2e81d7fb0b1af55f5ff99f9ba05442a444b11e45"},
     {file = "coverage-6.4.tar.gz", hash = "sha256:727dafd7f67a6e1cad808dc884bd9c5a2f6ef1f8f6d2f22b37b96cb0080d4f49"},
 ]
-"cppython-core 0.4.1.dev1" = [
-    {file = "cppython_core-0.4.1.dev1-py3-none-any.whl", hash = "sha256:1ca834e8a9167b8623a1f103770e02925344f45ae877b0bf2599394fbf7b4943"},
-    {file = "cppython-core-0.4.1.dev1.tar.gz", hash = "sha256:d236a0c354e8e2198416f2bedddad1cd5d0d374f9b19d56be0030d6c5adb0435"},
+"cppython-core 0.4.1.dev7" = [
+    {file = "cppython_core-0.4.1.dev7-py3-none-any.whl", hash = "sha256:9d1366e65df7897171ce11f29b1ab2af5f58d78939b6d14ce89ed9862694cd16"},
+    {file = "cppython-core-0.4.1.dev7.tar.gz", hash = "sha256:1565940dd6a0f214d8d89bad3ded1764c3d4377add7892b7e9fc9a925e47d4a5"},
 ]
 "dill 0.3.5.1" = [
     {file = "dill-0.3.5.1-py2.py3-none-any.whl", hash = "sha256:33501d03270bbe410c72639b350e941882a8b0fd55357580fbc873fba0c59302"},
@@ -461,9 +461,9 @@ content_hash = "sha256:765a5d1e62fb9ab053cf3ea382251157eabbde54c2951a2536787be60
     {file = "pydantic-1.9.1-py3-none-any.whl", hash = "sha256:4988c0f13c42bfa9ddd2fe2f569c9d54646ce84adc5de84228cfe83396f3bd58"},
     {file = "pydantic-1.9.1.tar.gz", hash = "sha256:1ed987c3ff29fff7fd8c3ea3a3ea877ad310aae2ef9889a119e22d3f2db0691a"},
 ]
-"pylint 2.14.0" = [
-    {file = "pylint-2.14.0-py3-none-any.whl", hash = "sha256:ef64ce5d4c17b8906caeaf2c2914ef3036a3a1b7f4a86f5fbf6caff9067c5f63"},
-    {file = "pylint-2.14.0.tar.gz", hash = "sha256:10d291ea5133645f73fc1b51ca137ad6531223c1461a5632a1db029a9bc033b5"},
+"pylint 2.14.1" = [
+    {file = "pylint-2.14.1-py3-none-any.whl", hash = "sha256:bb71e6d169506de585edea997e48d9ff20c0dc0e2fbc1d166bad6b640120326b"},
+    {file = "pylint-2.14.1.tar.gz", hash = "sha256:549261e0762c3466cc001024c4419c08252cb8c8d40f5c2c6966fea690e7fe2a"},
 ]
 "pyparsing 3.0.9" = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
@@ -477,9 +477,9 @@ content_hash = "sha256:765a5d1e62fb9ab053cf3ea382251157eabbde54c2951a2536787be60
     {file = "pytest_cov-3.0.0-py3-none-any.whl", hash = "sha256:578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6"},
     {file = "pytest-cov-3.0.0.tar.gz", hash = "sha256:e7f0f5b1617d2210a2cabc266dfe2f4c75a8d32fb89eafb7ad9d06f6d076d470"},
 ]
-"pytest-cppython 0.2.0" = [
-    {file = "pytest_cppython-0.2.0-py3-none-any.whl", hash = "sha256:08813645205e2c8a2b6a9d2a4ee590d1f760f6e5f6b426cf9a85594244740fe7"},
-    {file = "pytest-cppython-0.2.0.tar.gz", hash = "sha256:cafcbb7e060c02d4ba7cdd62a8294dfd97d3a2f99d1cf5f9d0ded5ce05030014"},
+"pytest-cppython 0.2.1.dev1" = [
+    {file = "pytest_cppython-0.2.1.dev1-py3-none-any.whl", hash = "sha256:a86c99e397d1e7efc2d3366c424d880ee2e55f433ad6c2cce0ae8dc5f3906e9b"},
+    {file = "pytest-cppython-0.2.1.dev1.tar.gz", hash = "sha256:6d7b9ff45020438130e8239ebf7090c4a6b101232039bb0bdcebb6c87e04aef4"},
 ]
 "pytest-mock 3.7.0" = [
     {file = "pytest_mock-3.7.0-py3-none-any.whl", hash = "sha256:6cff27cec936bf81dc5ee87f07132b807bcda51106b5ec4b90a04331cba76231"},
