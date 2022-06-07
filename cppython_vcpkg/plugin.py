@@ -224,8 +224,8 @@ class VcpkgGenerator(Generator):
 
     def generate_cmake_config(self) -> ConfigurePreset:
 
-        toolchainFile = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
+        toolchain_file = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
 
-        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchainFile))
+        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchain_file))
 
         return configure_preset
