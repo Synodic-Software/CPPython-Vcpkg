@@ -111,7 +111,13 @@ class VcpkgGenerator(Generator[VcpkgData]):
             vcpkg_dependencies.append(vcpkg_dependency)
 
         # Create the manifest
-        return Manifest(name=self.project.name, version=self.project.version, dependencies=vcpkg_dependencies)
+
+        # Version is known to not be None, and has been filled
+        # TODO: Type for ResolvedProject
+        version = self.project.version
+        assert version is not None
+
+        return Manifest(name=self.project.name, version=version, dependencies=vcpkg_dependencies)
 
     @staticmethod
     def name() -> str:
