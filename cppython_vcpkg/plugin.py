@@ -58,7 +58,7 @@ class Manifest(CPPythonModel):
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
-class VcpkgGenerator(Generator):
+class VcpkgGenerator(Generator[VcpkgData]):
     """
     _summary_
 
@@ -105,7 +105,7 @@ class VcpkgGenerator(Generator):
         """
         base_dependencies = self.cppython.dependencies
 
-        vcpkg_dependencies = []
+        vcpkg_dependencies: list[VcpkgDependency] = []
         for dependency in base_dependencies:
             vcpkg_dependency = VcpkgDependency(name=dependency.name)
             vcpkg_dependencies.append(vcpkg_dependency)
@@ -118,7 +118,7 @@ class VcpkgGenerator(Generator):
         return "vcpkg"
 
     @staticmethod
-    def data_type() -> Type[GeneratorData]:
+    def data_type() -> Type[VcpkgData]:
         return VcpkgData
 
     def generator_downloaded(self, path: Path) -> bool:
@@ -212,7 +212,7 @@ class VcpkgGenerator(Generator):
             subprocess_call(
                 [
                     executable,
-                    "install",
+                    "upgrade",
                     f"--x-install-root={self.generator.install_path}",
                     f"--x-manifest-root={self.generator.manifest_path}",
                 ],
