@@ -8,19 +8,31 @@ from pathlib import Path, PosixPath, WindowsPath
 from typing import Optional, Type
 
 from cppython_core.schema import (
-    PEP621,
     ConfigurePreset,
-    CPPythonData,
+    CPPythonDataResolved,
     CPPythonModel,
     Generator,
     GeneratorConfiguration,
     GeneratorData,
+    GeneratorDataResolved,
+    PEP621Resolved,
+    ProjectConfiguration,
 )
 from cppython_core.utility import subprocess_call
 from pydantic import Field, HttpUrl
+from pydantic.types import DirectoryPath
 
 
-class VcpkgData(GeneratorData):
+class VcpkgDataResolved(GeneratorDataResolved):
+    """
+    TODO
+    """
+
+    install_path: DirectoryPath
+    manifest_path: DirectoryPath
+
+
+class VcpkgData(GeneratorData[VcpkgDataResolved]):
     """
     TODO
     """
@@ -35,6 +47,24 @@ class VcpkgData(GeneratorData):
     manifest_path: Path = Field(
         default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
     )
+
+    def resolve(self, project_configuration: ProjectConfiguration) -> VcpkgDataResolved:
+        modified = self.copy(deep=True)
+
+        root_directory = project_configuration.pyproject_file.parent.absolute()
+
+        # Add the project location to all relative paths
+        if not modified.install_path.is_absolute():
+            modified.install_path = root_directory / modified.install_path
+
+        if not modified.manifest_path.is_absolute():
+            modified.manifest_path = root_directory / modified.manifest_path
+
+        # Create directories
+        modified.install_path.mkdir(parents=True, exist_ok=True)
+        modified.manifest_path.mkdir(parents=True, exist_ok=True)
+
+        return VcpkgDataResolved(**modified.dict())
 
 
 class VcpkgDependency(CPPythonModel):
@@ -58,7 +88,7 @@ class Manifest(CPPythonModel):
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
-class VcpkgGenerator(Generator[VcpkgData]):
+class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
     """
     _summary_
 
@@ -67,28 +97,19 @@ class VcpkgGenerator(Generator[VcpkgData]):
     """
 
     def __init__(
-        self, configuration: GeneratorConfiguration, project: PEP621, cppython: CPPythonData, generator: VcpkgData
+        self,
+        configuration: GeneratorConfiguration,
+        project: PEP621Resolved,
+        cppython: CPPythonDataResolved,
+        generator: VcpkgDataResolved,
     ) -> None:
         """
-        TODO
+        Modify the vcpkg settings based on Generator configuration before passing it to the base
+            generator
         """
-
-        # Modify the vcpkg settings before sending it the base class to resolve dynamic modifications
-
-        modified_generator = generator.copy(deep=True)
-
-        # Resolve relative paths
-
-        if not modified_generator.install_path.is_absolute():
-            modified_generator.install_path = configuration.root_path.absolute() / modified_generator.install_path
-
-        if not modified_generator.manifest_path.is_absolute():
-            modified_generator.manifest_path = configuration.root_path.absolute() / modified_generator.manifest_path
-
-        super().__init__(configuration, project, cppython, modified_generator)
+        super().__init__(configuration, project, cppython, generator)
 
     def _update_generator(self, path: Path):
-
         # TODO: Identify why Shell is needed and refactor
         try:
             if system_name == "nt":
@@ -127,8 +148,11 @@ class VcpkgGenerator(Generator[VcpkgData]):
     def data_type() -> Type[VcpkgData]:
         return VcpkgData
 
-    def generator_downloaded(self, path: Path) -> bool:
+    @staticmethod
+    def resolved_data_type() -> Type[VcpkgDataResolved]:
+        return VcpkgDataResolved
 
+    def generator_downloaded(self, path: Path) -> bool:
         try:
             # Hide output, given an error output is a logic conditional
             subprocess_call(
@@ -143,7 +167,6 @@ class VcpkgGenerator(Generator[VcpkgData]):
         return True
 
     def download_generator(self, path: Path) -> None:
-
         try:
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(
@@ -229,7 +252,6 @@ class VcpkgGenerator(Generator[VcpkgData]):
             raise
 
     def generate_cmake_config(self) -> ConfigurePreset:
-
         toolchain_file = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
 
         configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchain_file))

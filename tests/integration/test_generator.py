@@ -1,17 +1,10 @@
 """
 TODO
 """
-from pathlib import Path
+from typing import Type
 
 import pytest
-from cppython_core.schema import (
-    PEP621,
-    CPPythonData,
-    GeneratorConfiguration,
-    PyProject,
-    TargetEnum,
-    ToolData,
-)
+from cppython_core.schema import PEP621, CPPythonData, PyProject, TargetEnum, ToolData
 from pytest_cppython.plugin import GeneratorIntegrationTests
 
 from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
@@ -23,15 +16,21 @@ default_pyproject = PyProject(project=default_pep621, tool=default_tool_data)
 default_vcpkg_data = VcpkgData()
 
 
-class TestCPPythonGenerator(GeneratorIntegrationTests):
+class TestCPPythonGenerator(GeneratorIntegrationTests[VcpkgGenerator, VcpkgData]):
     """
     The tests for the PDM generator
     """
 
-    @pytest.fixture(name="generator")
-    def fixture_generator(self) -> VcpkgGenerator:
+    @pytest.fixture(name="generator_data")
+    def fixture_generator_data(self) -> VcpkgData:
         """
-        Override of the plugin provided generator fixture.
+        A required testing hook that allows GeneratorData generation
         """
-        configuration = GeneratorConfiguration(root_path=Path())
-        return VcpkgGenerator(configuration, default_pep621, default_cppython_data, default_vcpkg_data)
+        return VcpkgData()
+
+    @pytest.fixture(name="generator_type")
+    def fixture_generator_type(self) -> Type[VcpkgGenerator]:
+        """
+        A required testing hook that allows type generation
+        """
+        return VcpkgGenerator
