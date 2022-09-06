@@ -2,11 +2,11 @@
 TODO
 """
 import json
-import subprocess
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Optional, Type
 
+from cppython_core.exceptions import ProcessError
 from cppython_core.schema import (
     ConfigurePreset,
     CPPythonDataResolved,
@@ -113,10 +113,10 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
         # TODO: Identify why Shell is needed and refactor
         try:
             if system_name == "nt":
-                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=self.logger, cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
-        except subprocess.CalledProcessError:
+                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], logger=self.logger, cwd=path, shell=True)
+        except ProcessError:
             self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
@@ -157,11 +157,12 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
             # Hide output, given an error output is a logic conditional
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
+                logger=self.logger,
                 suppress=True,
                 cwd=path,
             )
 
-        except subprocess.CalledProcessError:
+        except ProcessError:
             return False
 
         return True
@@ -171,10 +172,11 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(
                 ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
+                logger=self.logger,
                 cwd=path,
             )
 
-        except subprocess.CalledProcessError:
+        except ProcessError:
             self.logger.error("Unable to clone the vcpkg repository", exc_info=True)
             raise
 
@@ -183,9 +185,9 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
     def update_generator(self, path: Path) -> None:
         try:
             # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(["git", "fetch", "origin"], cwd=path)
-            subprocess_call(["git", "pull"], cwd=path)
-        except subprocess.CalledProcessError:
+            subprocess_call(["git", "fetch", "origin"], logger=self.logger, cwd=path)
+            subprocess_call(["git", "pull"], logger=self.logger, cwd=path)
+        except ProcessError:
             self.logger.error("Unable to update the vcpkg repository", exc_info=True)
             raise
 
@@ -215,9 +217,10 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
                     f"--x-install-root={self.generator.install_path}",
                     f"--x-manifest-root={self.generator.manifest_path}",
                 ],
+                logger=self.logger,
                 cwd=self.cppython.build_path,
             )
-        except subprocess.CalledProcessError:
+        except ProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
@@ -241,13 +244,14 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
             subprocess_call(
                 [
                     executable,
-                    "upgrade",
+                    "install",
                     f"--x-install-root={self.generator.install_path}",
                     f"--x-manifest-root={self.generator.manifest_path}",
                 ],
+                logger=self.logger,
                 cwd=self.cppython.build_path,
             )
-        except subprocess.CalledProcessError:
+        except ProcessError:
             self.logger.error("Unable to install project dependencies", exc_info=True)
             raise
 

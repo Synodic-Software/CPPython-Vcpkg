@@ -47,6 +47,7 @@ test = [
 cmake = "cppython_vcpkg.plugin:VcpkgGenerator"
 
 [tool.pytest.ini_options]
+log_cli = true
 testpaths = [
   "tests",
 ]
