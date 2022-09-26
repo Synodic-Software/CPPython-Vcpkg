@@ -1,22 +1,20 @@
+"""The vcpkg provider implementation
 """
-TODO
-"""
+
 import json
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Optional, Type
 
 from cppython_core.exceptions import ProcessError
 from cppython_core.schema import (
-    ConfigurePreset,
     CPPythonDataResolved,
     CPPythonModel,
+    PEP621Resolved,
+    ProjectConfiguration,
     Provider,
     ProviderConfiguration,
     ProviderData,
     ProviderDataResolved,
-    PEP621Resolved,
-    ProjectConfiguration,
 )
 from cppython_core.utility import subprocess_call
 from pydantic import Field, HttpUrl
@@ -24,20 +22,15 @@ from pydantic.types import DirectoryPath
 
 
 class VcpkgDataResolved(ProviderDataResolved):
-    """
-    TODO
-    """
+    """Resolved vcpkg data"""
 
     install_path: DirectoryPath
     manifest_path: DirectoryPath
 
 
 class VcpkgData(ProviderData[VcpkgDataResolved]):
-    """
-    TODO
-    """
+    """vcpkg provider data"""
 
-    # TODO: Make relative to CPPython:build_path
     install_path: Path = Field(
         default=Path("build"),
         alias="install-path",
@@ -49,6 +42,18 @@ class VcpkgData(ProviderData[VcpkgDataResolved]):
     )
 
     def resolve(self, project_configuration: ProjectConfiguration) -> VcpkgDataResolved:
+        """Creates a copy and resolves dynamic attributes
+
+        Args:
+            project_configuration: The configuration data used to help the resolution
+
+        Raises:
+            NotImplementedError: Must be sub-classed
+
+        Returns:
+            The resolved provider data type
+        """
+
         modified = self.copy(deep=True)
 
         root_directory = project_configuration.pyproject_file.parent.absolute()
@@ -68,33 +73,23 @@ class VcpkgData(ProviderData[VcpkgDataResolved]):
 
 
 class VcpkgDependency(CPPythonModel):
-    """
-    Vcpkg dependency type
-    """
+    """Vcpkg dependency type"""
 
     name: str
 
 
 class Manifest(CPPythonModel):
-    """
-    The manifest schema
-    """
+    """The manifest schema"""
 
     name: str
 
-    # TODO: Support other version types
     version: str
-    homepage: Optional[HttpUrl] = Field(default=None)
+    homepage: HttpUrl | None = Field(default=None)
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
 class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
-    """
-    _summary_
-
-    Arguments:
-        Provider {_type_} -- _description_
-    """
+    """vcpkg Provider"""
 
     def __init__(
         self,
@@ -103,27 +98,30 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         cppython: CPPythonDataResolved,
         provider: VcpkgDataResolved,
     ) -> None:
-        """
-        Modify the vcpkg settings based on Provider configuration before passing it to the base
-            provider
-        """
         super().__init__(configuration, project, cppython, provider)
 
     @classmethod
-    def _update_provider(cls, path: Path):
-        # TODO: Identify why Shell is needed and refactor
+    def _update_provider(cls, path: Path) -> None:
+        """_summary_
+
+        Args:
+            path: _description_
+        """
+
         try:
             if system_name == "nt":
-                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=cls.logger, cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=cls.logger(), cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], logger=cls.logger, cwd=path, shell=True)
+                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], logger=cls.logger(), cwd=path, shell=True)
         except ProcessError:
-            cls.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
+            cls.logger().error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
     def _extract_manifest(self) -> Manifest:
-        """
-        TODO
+        """_summary_
+
+        Returns:
+            _description_
         """
         base_dependencies = self.cppython.dependencies
 
@@ -135,7 +133,6 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         # Create the manifest
 
         # Version is known to not be None, and has been filled
-        # TODO: Type for ResolvedProject
         version = self.project.version
         assert version is not None
 
@@ -143,23 +140,50 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
 
     @staticmethod
     def name() -> str:
+        """The string that is matched with the [tool.cppython.provider] string
+
+        Returns:
+            Plugin name
+        """
         return "vcpkg"
 
     @staticmethod
-    def data_type() -> Type[VcpkgData]:
+    def data_type() -> type[VcpkgData]:
+        """Returns the pydantic type to cast the provider configuration data to
+
+        Returns:
+            Plugin data type
+        """
         return VcpkgData
 
     @staticmethod
-    def resolved_data_type() -> Type[VcpkgDataResolved]:
+    def resolved_data_type() -> type[VcpkgDataResolved]:
+        """Returns the pydantic type to cast the resolved provider configuration data to
+
+        Returns:
+            Plugin resolved data type
+        """
         return VcpkgDataResolved
 
     @classmethod
-    def provider_downloaded(cls, path: DirectoryPath) -> bool:
+    def tooling_downloaded(cls, path: DirectoryPath) -> bool:
+        """Returns whether the provider tooling needs to be downloaded
+
+        Args:
+            path: The directory to check for downloaded tooling
+
+        Raises:
+            ProcessError: Must be sub-classed
+
+        Returns:
+            Whether the tooling has been downloaded or not
+        """
+
         try:
             # Hide output, given an error output is a logic conditional
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
-                logger=cls.logger,
+                logger=cls.logger(),
                 suppress=True,
                 cwd=path,
             )
@@ -170,36 +194,58 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         return True
 
     @classmethod
-    def download_provider(cls, path: DirectoryPath) -> None:
+    async def download_tooling(cls, path: DirectoryPath) -> None:
+        """Installs the external tooling required by the provider
+
+        Args:
+            path: The directory to download any extra tooling to
+
+        Raises:
+            ProcessError: Must be sub-classed
+        """
+
+        logger = cls.logger()
         try:
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(
                 ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
-                logger=cls.logger,
+                logger=logger,
                 cwd=path,
             )
 
         except ProcessError:
-            cls.logger.error("Unable to clone the vcpkg repository", exc_info=True)
+            logger.error("Unable to clone the vcpkg repository", exc_info=True)
             raise
 
         cls._update_provider(path)
 
     @classmethod
     def update_provider(cls, path: DirectoryPath) -> None:
+        """_summary_
+
+        Args:
+            path: _description_
+
+        Raises:
+            ProcessError: Must be sub-classed
+        """
+        logger = cls.logger()
+
         try:
             # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(["git", "fetch", "origin"], logger=cls.logger, cwd=path)
-            subprocess_call(["git", "pull"], logger=cls.logger, cwd=path)
+            subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
+            subprocess_call(["git", "pull"], logger=logger, cwd=path)
         except ProcessError:
-            cls.logger.error("Unable to update the vcpkg repository", exc_info=True)
+            logger.error("Unable to update the vcpkg repository", exc_info=True)
             raise
 
         cls._update_provider(path)
 
     def install(self) -> None:
-        """
-        TODO
+        """_summary_
+
+        Raises:
+            ProcessError: Must be sub-classed
         """
         manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
@@ -212,7 +258,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
-
+        logger = self.logger()
         try:
             subprocess_call(
                 [
@@ -221,16 +267,18 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
                     f"--x-install-root={self.provider.install_path}",
                     f"--x-manifest-root={self.provider.manifest_path}",
                 ],
-                logger=self.logger,
+                logger=logger,
                 cwd=self.cppython.build_path,
             )
         except ProcessError:
-            self.logger.error("Unable to install project dependencies", exc_info=True)
+            logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
     def update(self) -> None:
-        """
-        TODO
+        """_summary_
+
+        Raises:
+            ProcessError: Must be sub-classed
         """
         manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
@@ -243,7 +291,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         vcpkg_path = self.cppython.install_path / self.name()
 
         executable = vcpkg_path / "vcpkg"
-
+        logger = self.logger()
         try:
             subprocess_call(
                 [
@@ -252,16 +300,9 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
                     f"--x-install-root={self.provider.install_path}",
                     f"--x-manifest-root={self.provider.manifest_path}",
                 ],
-                logger=self.logger,
+                logger=logger,
                 cwd=self.cppython.build_path,
             )
         except ProcessError:
-            self.logger.error("Unable to install project dependencies", exc_info=True)
+            logger.error("Unable to install project dependencies", exc_info=True)
             raise
-
-    def generate_cmake_config(self) -> ConfigurePreset:
-        toolchain_file = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
-
-        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchain_file))
-
-        return configure_preset

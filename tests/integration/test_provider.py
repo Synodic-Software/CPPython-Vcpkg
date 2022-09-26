@@ -1,7 +1,5 @@
+"""Integration tests for the provider
 """
-TODO
-"""
-from typing import Type
 
 import pytest
 from cppython_core.schema import PEP621, CPPythonData, PyProject, TargetEnum, ToolData
@@ -17,20 +15,22 @@ default_vcpkg_data = VcpkgData()
 
 
 class TestCPPythonProvider(ProviderIntegrationTests[VcpkgProvider, VcpkgData]):
-    """
-    The tests for the PDM provider
-    """
+    """The tests for the vcpkg provider"""
 
     @pytest.fixture(name="provider_data", scope="session")
     def fixture_provider_data(self) -> VcpkgData:
-        """
-        A required testing hook that allows ProviderData generation
+        """A required testing hook that allows ProviderData generation
+
+        Returns:
+            The constructed provider data
         """
         return VcpkgData()
 
     @pytest.fixture(name="provider_type", scope="session")
-    def fixture_provider_type(self) -> Type[VcpkgProvider]:
-        """
-        A required testing hook that allows type generation
+    def fixture_provider_type(self) -> type[VcpkgProvider]:
+        """A required testing hook that allows type generation
+
+        Returns:
+            The type of the Provider
         """
         return VcpkgProvider
