@@ -47,9 +47,6 @@ class VcpkgData(ProviderData[VcpkgDataResolved]):
         Args:
             project_configuration: The configuration data used to help the resolution
 
-        Raises:
-            NotImplementedError: Must be sub-classed
-
         Returns:
             The resolved provider data type
         """
@@ -102,10 +99,10 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
 
     @classmethod
     def _update_provider(cls, path: Path) -> None:
-        """_summary_
+        """Calls the vcpkg tool install script
 
         Args:
-            path: _description_
+            path: The path where the script is located
         """
 
         try:
@@ -118,10 +115,10 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
             raise
 
     def _extract_manifest(self) -> Manifest:
-        """_summary_
+        """From the input configuration data, construct a Vcpkg specific Manifest type
 
         Returns:
-            _description_
+            The manifest
         """
         base_dependencies = self.cppython.dependencies
 
@@ -173,7 +170,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
             path: The directory to check for downloaded tooling
 
         Raises:
-            ProcessError: Must be sub-classed
+            ProcessError: Failed vcpkg calls
 
         Returns:
             Whether the tooling has been downloaded or not
@@ -201,51 +198,38 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
             path: The directory to download any extra tooling to
 
         Raises:
-            ProcessError: Must be sub-classed
-        """
-
-        logger = cls.logger()
-        try:
-            # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(
-                ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
-                logger=logger,
-                cwd=path,
-            )
-
-        except ProcessError:
-            logger.error("Unable to clone the vcpkg repository", exc_info=True)
-            raise
-
-        cls._update_provider(path)
-
-    @classmethod
-    def update_provider(cls, path: DirectoryPath) -> None:
-        """_summary_
-
-        Args:
-            path: _description_
-
-        Raises:
-            ProcessError: Must be sub-classed
+            ProcessError: Failed vcpkg calls
         """
         logger = cls.logger()
 
-        try:
-            # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
-            subprocess_call(["git", "pull"], logger=logger, cwd=path)
-        except ProcessError:
-            logger.error("Unable to update the vcpkg repository", exc_info=True)
-            raise
+        if cls.tooling_downloaded(path):
+            try:
+                # The entire history is need for vcpkg 'baseline' information
+                subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
+                subprocess_call(["git", "pull"], logger=logger, cwd=path)
+            except ProcessError:
+                logger.error("Unable to update the vcpkg repository", exc_info=True)
+                raise
+        else:
+            try:
+                # The entire history is need for vcpkg 'baseline' information
+                subprocess_call(
+                    ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
+                    logger=logger,
+                    cwd=path,
+                )
+
+            except ProcessError:
+                logger.error("Unable to clone the vcpkg repository", exc_info=True)
+                raise
 
         cls._update_provider(path)
 
     def install(self) -> None:
-        """_summary_
+        """Called when dependencies need to be installed from a lock file.
 
         Raises:
-            ProcessError: Must be sub-classed
+            ProcessError: Failed vcpkg calls
         """
         manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
@@ -275,10 +259,10 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
             raise
 
     def update(self) -> None:
-        """_summary_
+        """Called when dependencies need to be updated and written to the lock file.
 
         Raises:
-            ProcessError: Must be sub-classed
+            ProcessError: Failed vcpkg calls
         """
         manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
