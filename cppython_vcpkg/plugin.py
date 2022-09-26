@@ -239,9 +239,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        vcpkg_path = self.cppython.install_path / self.name()
-
-        executable = vcpkg_path / "vcpkg"
+        executable = self.cppython.install_path / "vcpkg"
         logger = self.logger()
         try:
             subprocess_call(
@@ -272,9 +270,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        vcpkg_path = self.cppython.install_path / self.name()
-
-        executable = vcpkg_path / "vcpkg"
+        executable = self.cppython.install_path / "vcpkg"
         logger = self.logger()
         try:
             subprocess_call(
