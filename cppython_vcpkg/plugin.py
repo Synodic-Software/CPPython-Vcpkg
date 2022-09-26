@@ -11,10 +11,10 @@ from cppython_core.schema import (
     ConfigurePreset,
     CPPythonDataResolved,
     CPPythonModel,
-    Generator,
-    GeneratorConfiguration,
-    GeneratorData,
-    GeneratorDataResolved,
+    Provider,
+    ProviderConfiguration,
+    ProviderData,
+    ProviderDataResolved,
     PEP621Resolved,
     ProjectConfiguration,
 )
@@ -23,7 +23,7 @@ from pydantic import Field, HttpUrl
 from pydantic.types import DirectoryPath
 
 
-class VcpkgDataResolved(GeneratorDataResolved):
+class VcpkgDataResolved(ProviderDataResolved):
     """
     TODO
     """
@@ -32,7 +32,7 @@ class VcpkgDataResolved(GeneratorDataResolved):
     manifest_path: DirectoryPath
 
 
-class VcpkgData(GeneratorData[VcpkgDataResolved]):
+class VcpkgData(ProviderData[VcpkgDataResolved]):
     """
     TODO
     """
@@ -88,36 +88,37 @@ class Manifest(CPPythonModel):
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
-class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
+class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
     """
     _summary_
 
     Arguments:
-        Generator {_type_} -- _description_
+        Provider {_type_} -- _description_
     """
 
     def __init__(
         self,
-        configuration: GeneratorConfiguration,
+        configuration: ProviderConfiguration,
         project: PEP621Resolved,
         cppython: CPPythonDataResolved,
-        generator: VcpkgDataResolved,
+        provider: VcpkgDataResolved,
     ) -> None:
         """
-        Modify the vcpkg settings based on Generator configuration before passing it to the base
-            generator
+        Modify the vcpkg settings based on Provider configuration before passing it to the base
+            provider
         """
-        super().__init__(configuration, project, cppython, generator)
+        super().__init__(configuration, project, cppython, provider)
 
-    def _update_generator(self, path: Path):
+    @classmethod
+    def _update_provider(cls, path: Path):
         # TODO: Identify why Shell is needed and refactor
         try:
             if system_name == "nt":
-                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=self.logger, cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=cls.logger, cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], logger=self.logger, cwd=path, shell=True)
+                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], logger=cls.logger, cwd=path, shell=True)
         except ProcessError:
-            self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
+            cls.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
     def _extract_manifest(self) -> Manifest:
@@ -152,12 +153,13 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
     def resolved_data_type() -> Type[VcpkgDataResolved]:
         return VcpkgDataResolved
 
-    def generator_downloaded(self, path: Path) -> bool:
+    @classmethod
+    def provider_downloaded(cls, path: DirectoryPath) -> bool:
         try:
             # Hide output, given an error output is a logic conditional
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
-                logger=self.logger,
+                logger=cls.logger,
                 suppress=True,
                 cwd=path,
             )
@@ -167,37 +169,39 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
 
         return True
 
-    def download_generator(self, path: Path) -> None:
+    @classmethod
+    def download_provider(cls, path: DirectoryPath) -> None:
         try:
             # The entire history is need for vcpkg 'baseline' information
             subprocess_call(
                 ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
-                logger=self.logger,
+                logger=cls.logger,
                 cwd=path,
             )
 
         except ProcessError:
-            self.logger.error("Unable to clone the vcpkg repository", exc_info=True)
+            cls.logger.error("Unable to clone the vcpkg repository", exc_info=True)
             raise
 
-        self._update_generator(path)
+        cls._update_provider(path)
 
-    def update_generator(self, path: Path) -> None:
+    @classmethod
+    def update_provider(cls, path: DirectoryPath) -> None:
         try:
             # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(["git", "fetch", "origin"], logger=self.logger, cwd=path)
-            subprocess_call(["git", "pull"], logger=self.logger, cwd=path)
+            subprocess_call(["git", "fetch", "origin"], logger=cls.logger, cwd=path)
+            subprocess_call(["git", "pull"], logger=cls.logger, cwd=path)
         except ProcessError:
-            self.logger.error("Unable to update the vcpkg repository", exc_info=True)
+            cls.logger.error("Unable to update the vcpkg repository", exc_info=True)
             raise
 
-        self._update_generator(path)
+        cls._update_provider(path)
 
     def install(self) -> None:
         """
         TODO
         """
-        manifest_path = self.generator.manifest_path
+        manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -214,8 +218,8 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.generator.install_path}",
-                    f"--x-manifest-root={self.generator.manifest_path}",
+                    f"--x-install-root={self.provider.install_path}",
+                    f"--x-manifest-root={self.provider.manifest_path}",
                 ],
                 logger=self.logger,
                 cwd=self.cppython.build_path,
@@ -228,7 +232,7 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
         """
         TODO
         """
-        manifest_path = self.generator.manifest_path
+        manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -245,8 +249,8 @@ class VcpkgGenerator(Generator[VcpkgData, VcpkgDataResolved]):
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.generator.install_path}",
-                    f"--x-manifest-root={self.generator.manifest_path}",
+                    f"--x-install-root={self.provider.install_path}",
+                    f"--x-manifest-root={self.provider.manifest_path}",
                 ],
                 logger=self.logger,
                 cwd=self.cppython.build_path,

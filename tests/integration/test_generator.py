@@ -5,9 +5,9 @@ from typing import Type
 
 import pytest
 from cppython_core.schema import PEP621, CPPythonData, PyProject, TargetEnum, ToolData
-from pytest_cppython.plugin import GeneratorIntegrationTests
+from pytest_cppython.plugin import ProviderIntegrationTests
 
-from cppython_vcpkg.plugin import VcpkgData, VcpkgGenerator
+from cppython_vcpkg.plugin import VcpkgData, VcpkgProvider
 
 default_pep621 = PEP621(name="test_name", version="1.0")
 default_cppython_data = CPPythonData(target=TargetEnum.EXE)
@@ -16,21 +16,21 @@ default_pyproject = PyProject(project=default_pep621, tool=default_tool_data)
 default_vcpkg_data = VcpkgData()
 
 
-class TestCPPythonGenerator(GeneratorIntegrationTests[VcpkgGenerator, VcpkgData]):
+class TestCPPythonProvider(ProviderIntegrationTests[VcpkgProvider, VcpkgData]):
     """
-    The tests for the PDM generator
+    The tests for the PDM provider
     """
 
-    @pytest.fixture(name="generator_data")
-    def fixture_generator_data(self) -> VcpkgData:
+    @pytest.fixture(name="provider_data", scope="session")
+    def fixture_provider_data(self) -> VcpkgData:
         """
-        A required testing hook that allows GeneratorData generation
+        A required testing hook that allows ProviderData generation
         """
         return VcpkgData()
 
-    @pytest.fixture(name="generator_type")
-    def fixture_generator_type(self) -> Type[VcpkgGenerator]:
+    @pytest.fixture(name="provider_type", scope="session")
+    def fixture_provider_type(self) -> Type[VcpkgProvider]:
         """
         A required testing hook that allows type generation
         """
-        return VcpkgGenerator
+        return VcpkgProvider
