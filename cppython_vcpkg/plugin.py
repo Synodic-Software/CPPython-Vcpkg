@@ -1,31 +1,36 @@
+"""The vcpkg provider implementation
 """
-TODO
-"""
+
 import json
-import subprocess
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Optional, Type
 
+from cppython_core.exceptions import ProcessError
 from cppython_core.schema import (
-    PEP621,
-    ConfigurePreset,
-    CPPythonData,
+    CPPythonDataResolved,
     CPPythonModel,
-    Generator,
-    GeneratorConfiguration,
-    GeneratorData,
+    PEP621Resolved,
+    ProjectConfiguration,
+    Provider,
+    ProviderConfiguration,
+    ProviderData,
+    ProviderDataResolved,
 )
 from cppython_core.utility import subprocess_call
 from pydantic import Field, HttpUrl
+from pydantic.types import DirectoryPath
 
 
-class VcpkgData(GeneratorData):
-    """
-    TODO
-    """
+class VcpkgDataResolved(ProviderDataResolved):
+    """Resolved vcpkg data"""
 
-    # TODO: Make relative to CPPython:build_path
+    install_path: DirectoryPath
+    manifest_path: DirectoryPath
+
+
+class VcpkgData(ProviderData[VcpkgDataResolved]):
+    """vcpkg provider data"""
+
     install_path: Path = Field(
         default=Path("build"),
         alias="install-path",
@@ -36,72 +41,86 @@ class VcpkgData(GeneratorData):
         default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
     )
 
+    def resolve(self, project_configuration: ProjectConfiguration) -> VcpkgDataResolved:
+        """Creates a copy and resolves dynamic attributes
+
+        Args:
+            project_configuration: The configuration data used to help the resolution
+
+        Returns:
+            The resolved provider data type
+        """
+
+        modified = self.copy(deep=True)
+
+        root_directory = project_configuration.pyproject_file.parent.absolute()
+
+        # Add the project location to all relative paths
+        if not modified.install_path.is_absolute():
+            modified.install_path = root_directory / modified.install_path
+
+        if not modified.manifest_path.is_absolute():
+            modified.manifest_path = root_directory / modified.manifest_path
+
+        # Create directories
+        modified.install_path.mkdir(parents=True, exist_ok=True)
+        modified.manifest_path.mkdir(parents=True, exist_ok=True)
+
+        return VcpkgDataResolved(**modified.dict())
+
 
 class VcpkgDependency(CPPythonModel):
-    """
-    Vcpkg dependency type
-    """
+    """Vcpkg dependency type"""
 
     name: str
 
 
 class Manifest(CPPythonModel):
-    """
-    The manifest schema
-    """
+    """The manifest schema"""
 
     name: str
 
-    # TODO: Support other version types
     version: str
-    homepage: Optional[HttpUrl] = Field(default=None)
+    homepage: HttpUrl | None = Field(default=None)
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
-class VcpkgGenerator(Generator[VcpkgData]):
-    """
-    _summary_
-
-    Arguments:
-        Generator {_type_} -- _description_
-    """
+class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
+    """vcpkg Provider"""
 
     def __init__(
-        self, configuration: GeneratorConfiguration, project: PEP621, cppython: CPPythonData, generator: VcpkgData
+        self,
+        configuration: ProviderConfiguration,
+        project: PEP621Resolved,
+        cppython: CPPythonDataResolved,
+        provider: VcpkgDataResolved,
     ) -> None:
+        super().__init__(configuration, project, cppython, provider)
+
+    @classmethod
+    def _update_provider(cls, path: Path) -> None:
+        """Calls the vcpkg tool install script
+
+        Args:
+            path: The path where the script is located
         """
-        TODO
-        """
 
-        # Modify the vcpkg settings before sending it the base class to resolve dynamic modifications
-
-        modified_generator = generator.copy(deep=True)
-
-        # Resolve relative paths
-
-        if not modified_generator.install_path.is_absolute():
-            modified_generator.install_path = configuration.root_path.absolute() / modified_generator.install_path
-
-        if not modified_generator.manifest_path.is_absolute():
-            modified_generator.manifest_path = configuration.root_path.absolute() / modified_generator.manifest_path
-
-        super().__init__(configuration, project, cppython, modified_generator)
-
-    def _update_generator(self, path: Path):
-
-        # TODO: Identify why Shell is needed and refactor
         try:
             if system_name == "nt":
-                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=cls.logger(), cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess_call(["sh", str(PosixPath("bootstrap-vcpkg.sh"))], cwd=path, shell=True)
-        except subprocess.CalledProcessError:
-            self.logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
+                subprocess_call(
+                    ["./" + str(PosixPath("bootstrap-vcpkg.sh"))], logger=cls.logger(), cwd=path, shell=True
+                )
+        except ProcessError:
+            cls.logger().error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
     def _extract_manifest(self) -> Manifest:
-        """
-        TODO
+        """From the input configuration data, construct a Vcpkg specific Manifest type
+
+        Returns:
+            The manifest
         """
         base_dependencies = self.cppython.dependencies
 
@@ -113,7 +132,6 @@ class VcpkgGenerator(Generator[VcpkgData]):
         # Create the manifest
 
         # Version is known to not be None, and has been filled
-        # TODO: Type for ResolvedProject
         version = self.project.version
         assert version is not None
 
@@ -121,58 +139,101 @@ class VcpkgGenerator(Generator[VcpkgData]):
 
     @staticmethod
     def name() -> str:
+        """The string that is matched with the [tool.cppython.provider] string
+
+        Returns:
+            Plugin name
+        """
         return "vcpkg"
 
     @staticmethod
-    def data_type() -> Type[VcpkgData]:
+    def data_type() -> type[VcpkgData]:
+        """Returns the pydantic type to cast the provider configuration data to
+
+        Returns:
+            Plugin data type
+        """
         return VcpkgData
 
-    def generator_downloaded(self, path: Path) -> bool:
+    @staticmethod
+    def resolved_data_type() -> type[VcpkgDataResolved]:
+        """Returns the pydantic type to cast the resolved provider configuration data to
+
+        Returns:
+            Plugin resolved data type
+        """
+        return VcpkgDataResolved
+
+    @classmethod
+    def tooling_downloaded(cls, path: DirectoryPath) -> bool:
+        """Returns whether the provider tooling needs to be downloaded
+
+        Args:
+            path: The directory to check for downloaded tooling
+
+        Raises:
+            ProcessError: Failed vcpkg calls
+
+        Returns:
+            Whether the tooling has been downloaded or not
+        """
 
         try:
             # Hide output, given an error output is a logic conditional
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
+                logger=cls.logger(),
                 suppress=True,
                 cwd=path,
             )
 
-        except subprocess.CalledProcessError:
+        except ProcessError:
             return False
 
         return True
 
-    def download_generator(self, path: Path) -> None:
+    @classmethod
+    async def download_tooling(cls, path: DirectoryPath) -> None:
+        """Installs the external tooling required by the provider
 
-        try:
-            # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(
-                ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
-                cwd=path,
-            )
+        Args:
+            path: The directory to download any extra tooling to
 
-        except subprocess.CalledProcessError:
-            self.logger.error("Unable to clone the vcpkg repository", exc_info=True)
-            raise
+        Raises:
+            ProcessError: Failed vcpkg calls
+        """
+        logger = cls.logger()
 
-        self._update_generator(path)
+        if cls.tooling_downloaded(path):
+            try:
+                # The entire history is need for vcpkg 'baseline' information
+                subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
+                subprocess_call(["git", "pull"], logger=logger, cwd=path)
+            except ProcessError:
+                logger.error("Unable to update the vcpkg repository", exc_info=True)
+                raise
+        else:
+            try:
+                # The entire history is need for vcpkg 'baseline' information
+                subprocess_call(
+                    ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
+                    logger=logger,
+                    cwd=path,
+                )
 
-    def update_generator(self, path: Path) -> None:
-        try:
-            # The entire history is need for vcpkg 'baseline' information
-            subprocess_call(["git", "fetch", "origin"], cwd=path)
-            subprocess_call(["git", "pull"], cwd=path)
-        except subprocess.CalledProcessError:
-            self.logger.error("Unable to update the vcpkg repository", exc_info=True)
-            raise
+            except ProcessError:
+                logger.error("Unable to clone the vcpkg repository", exc_info=True)
+                raise
 
-        self._update_generator(path)
+        cls._update_provider(path)
 
     def install(self) -> None:
+        """Called when dependencies need to be installed from a lock file.
+
+        Raises:
+            ProcessError: Failed vcpkg calls
         """
-        TODO
-        """
-        manifest_path = self.generator.manifest_path
+        manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -180,29 +241,30 @@ class VcpkgGenerator(Generator[VcpkgData]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        vcpkg_path = self.cppython.install_path / self.name()
-
-        executable = vcpkg_path / "vcpkg"
-
+        executable = self.cppython.install_path / "vcpkg"
+        logger = self.logger()
         try:
             subprocess_call(
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.generator.install_path}",
-                    f"--x-manifest-root={self.generator.manifest_path}",
+                    f"--x-install-root={self.provider.install_path}",
+                    f"--x-manifest-root={self.provider.manifest_path}",
                 ],
+                logger=logger,
                 cwd=self.cppython.build_path,
             )
-        except subprocess.CalledProcessError:
-            self.logger.error("Unable to install project dependencies", exc_info=True)
+        except ProcessError:
+            logger.error("Unable to install project dependencies", exc_info=True)
             raise
 
     def update(self) -> None:
+        """Called when dependencies need to be updated and written to the lock file.
+
+        Raises:
+            ProcessError: Failed vcpkg calls
         """
-        TODO
-        """
-        manifest_path = self.generator.manifest_path
+        manifest_path = self.provider.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -210,28 +272,19 @@ class VcpkgGenerator(Generator[VcpkgData]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        vcpkg_path = self.cppython.install_path / self.name()
-
-        executable = vcpkg_path / "vcpkg"
-
+        executable = self.cppython.install_path / "vcpkg"
+        logger = self.logger()
         try:
             subprocess_call(
                 [
                     executable,
-                    "upgrade",
-                    f"--x-install-root={self.generator.install_path}",
-                    f"--x-manifest-root={self.generator.manifest_path}",
+                    "install",
+                    f"--x-install-root={self.provider.install_path}",
+                    f"--x-manifest-root={self.provider.manifest_path}",
                 ],
+                logger=logger,
                 cwd=self.cppython.build_path,
             )
-        except subprocess.CalledProcessError:
-            self.logger.error("Unable to install project dependencies", exc_info=True)
+        except ProcessError:
+            logger.error("Unable to install project dependencies", exc_info=True)
             raise
-
-    def generate_cmake_config(self) -> ConfigurePreset:
-
-        toolchain_file = self.cppython.install_path / self.name() / "scripts/buildsystems/vcpkg.cmake"
-
-        configure_preset = ConfigurePreset(name=self.name(), toolchainFile=str(toolchain_file))
-
-        return configure_preset
