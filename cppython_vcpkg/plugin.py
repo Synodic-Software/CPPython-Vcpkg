@@ -4,31 +4,24 @@
 import json
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
+from typing import Any
 
 from cppython_core.exceptions import ProcessError
-from cppython_core.schema import (
-    CPPythonDataResolved,
-    CPPythonModel,
-    PEP621Resolved,
-    ProjectConfiguration,
-    Provider,
-    ProviderConfiguration,
-    ProviderData,
-    ProviderDataResolved,
-)
+from cppython_core.plugin_schema.provider import Provider, ProviderData
+from cppython_core.schema import CorePluginData, CPPythonModel
 from cppython_core.utility import subprocess_call
 from pydantic import Field, HttpUrl
 from pydantic.types import DirectoryPath
 
 
-class VcpkgDataResolved(ProviderDataResolved):
+class VcpkgDataResolved(CPPythonModel):
     """Resolved vcpkg data"""
 
     install_path: DirectoryPath
     manifest_path: DirectoryPath
 
 
-class VcpkgData(ProviderData[VcpkgDataResolved]):
+class VcpkgData(CPPythonModel):
     """vcpkg provider data"""
 
     install_path: Path = Field(
@@ -40,33 +33,6 @@ class VcpkgData(ProviderData[VcpkgDataResolved]):
     manifest_path: Path = Field(
         default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
     )
-
-    def resolve(self, project_configuration: ProjectConfiguration) -> VcpkgDataResolved:
-        """Creates a copy and resolves dynamic attributes
-
-        Args:
-            project_configuration: The configuration data used to help the resolution
-
-        Returns:
-            The resolved provider data type
-        """
-
-        modified = self.copy(deep=True)
-
-        root_directory = project_configuration.pyproject_file.parent.absolute()
-
-        # Add the project location to all relative paths
-        if not modified.install_path.is_absolute():
-            modified.install_path = root_directory / modified.install_path
-
-        if not modified.manifest_path.is_absolute():
-            modified.manifest_path = root_directory / modified.manifest_path
-
-        # Create directories
-        modified.install_path.mkdir(parents=True, exist_ok=True)
-        modified.manifest_path.mkdir(parents=True, exist_ok=True)
-
-        return VcpkgDataResolved(**modified.dict())
 
 
 class VcpkgDependency(CPPythonModel):
@@ -85,17 +51,42 @@ class Manifest(CPPythonModel):
     dependencies: list[VcpkgDependency] = Field(default=[])
 
 
-class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
+class VcpkgProvider(Provider):
     """vcpkg Provider"""
 
-    def __init__(
-        self,
-        configuration: ProviderConfiguration,
-        project: PEP621Resolved,
-        cppython: CPPythonDataResolved,
-        provider: VcpkgDataResolved,
-    ) -> None:
-        super().__init__(configuration, project, cppython, provider)
+    def __init__(self, group_data: ProviderData, core_data: CorePluginData) -> None:
+        super().__init__(group_data, core_data)
+
+        # Default the provider data
+        self.data = self._resolve_data(VcpkgData())
+
+    def _resolve_data(self, data: VcpkgData) -> VcpkgDataResolved:
+        """_summary_
+
+        Args:
+            data: _description_
+
+        Returns:
+            _description_
+        """
+
+        root_directory = self.core_data.project_data.pyproject_file.parent.absolute()
+
+        modified_install_path = data.install_path
+        modified_manifest_path = data.manifest_path
+
+        # Add the project location to all relative paths
+        if not modified_install_path.is_absolute():
+            modified_install_path = root_directory / modified_install_path
+
+        if not modified_manifest_path.is_absolute():
+            modified_manifest_path = root_directory / modified_manifest_path
+
+        # Create directories
+        modified_install_path.mkdir(parents=True, exist_ok=True)
+        modified_manifest_path.mkdir(parents=True, exist_ok=True)
+
+        return VcpkgDataResolved(install_path=modified_install_path, manifest_path=modified_manifest_path)
 
     @classmethod
     def _update_provider(cls, path: Path) -> None:
@@ -122,20 +113,18 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         Returns:
             The manifest
         """
-        base_dependencies = self.cppython.dependencies
+        base_dependencies = self.core_data.cppython_data.dependencies
 
         vcpkg_dependencies: list[VcpkgDependency] = []
         for dependency in base_dependencies:
             vcpkg_dependency = VcpkgDependency(name=dependency.name)
             vcpkg_dependencies.append(vcpkg_dependency)
 
-        # Create the manifest
-
-        # Version is known to not be None, and has been filled
-        version = self.project.version
-        assert version is not None
-
-        return Manifest(name=self.project.name, version=version, dependencies=vcpkg_dependencies)
+        return Manifest(
+            name=self.core_data.pep621_data.name,
+            version=self.core_data.pep621_data.version,
+            dependencies=vcpkg_dependencies,
+        )
 
     @staticmethod
     def name() -> str:
@@ -146,23 +135,34 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         """
         return "vcpkg"
 
-    @staticmethod
-    def data_type() -> type[VcpkgData]:
-        """Returns the pydantic type to cast the provider configuration data to
+    def activate(self, data: dict[str, Any]) -> None:
+        """_summary_
+
+        Args:
+            data: _description_
+        """
+
+        input_data = VcpkgData(**data)
+
+        self.data = self._resolve_data(input_data)
+
+    def supports_generator(self, name: str) -> bool:
+        """_summary_
+
+        Args:
+            name: _description_
 
         Returns:
-            Plugin data type
+            _description_
         """
-        return VcpkgData
 
-    @staticmethod
-    def resolved_data_type() -> type[VcpkgDataResolved]:
-        """Returns the pydantic type to cast the resolved provider configuration data to
+        if name == "cmake":
+            return True
 
-        Returns:
-            Plugin resolved data type
-        """
-        return VcpkgDataResolved
+        return False
+
+    def gather_input(self, name: str) -> Any:
+        return None
 
     @classmethod
     def tooling_downloaded(cls, path: DirectoryPath) -> bool:
@@ -233,7 +233,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_path = self.provider.manifest_path
+        manifest_path = self.data.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -241,18 +241,18 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        executable = self.cppython.install_path / "vcpkg"
+        executable = self.core_data.cppython_data.install_path / "vcpkg"
         logger = self.logger()
         try:
             subprocess_call(
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.provider.install_path}",
-                    f"--x-manifest-root={self.provider.manifest_path}",
+                    f"--x-install-root={self.data.install_path}",
+                    f"--x-manifest-root={self.data.manifest_path}",
                 ],
                 logger=logger,
-                cwd=self.cppython.build_path,
+                cwd=self.core_data.cppython_data.build_path,
             )
         except ProcessError:
             logger.error("Unable to install project dependencies", exc_info=True)
@@ -264,7 +264,7 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_path = self.provider.manifest_path
+        manifest_path = self.data.manifest_path
         manifest = self._extract_manifest()
 
         # Write out the manifest
@@ -272,18 +272,18 @@ class VcpkgProvider(Provider[VcpkgData, VcpkgDataResolved]):
         with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
-        executable = self.cppython.install_path / "vcpkg"
+        executable = self.core_data.cppython_data.install_path / "vcpkg"
         logger = self.logger()
         try:
             subprocess_call(
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.provider.install_path}",
-                    f"--x-manifest-root={self.provider.manifest_path}",
+                    f"--x-install-root={self.data.install_path}",
+                    f"--x-manifest-root={self.data.manifest_path}",
                 ],
                 logger=logger,
-                cwd=self.cppython.build_path,
+                cwd=self.core_data.cppython_data.build_path,
             )
         except ProcessError:
             logger.error("Unable to install project dependencies", exc_info=True)

@@ -1,33 +1,28 @@
 """Integration tests for the provider
 """
 
+from typing import Any
+
 import pytest
-from cppython_core.schema import PEP621, CPPythonData, PyProject, TargetEnum, ToolData
 from pytest_cppython.plugin import ProviderIntegrationTests
 
-from cppython_vcpkg.plugin import VcpkgData, VcpkgProvider
-
-default_pep621 = PEP621(name="test_name", version="1.0")
-default_cppython_data = CPPythonData(target=TargetEnum.EXE)
-default_tool_data = ToolData(cppython=default_cppython_data)
-default_pyproject = PyProject(project=default_pep621, tool=default_tool_data)
-default_vcpkg_data = VcpkgData()
+from cppython_vcpkg.plugin import VcpkgProvider
 
 
-class TestCPPythonProvider(ProviderIntegrationTests[VcpkgProvider, VcpkgData]):
+class TestCPPythonProvider(ProviderIntegrationTests[VcpkgProvider]):
     """The tests for the vcpkg provider"""
 
-    @pytest.fixture(name="provider_data", scope="session")
-    def fixture_provider_data(self) -> VcpkgData:
-        """A required testing hook that allows ProviderData generation
+    @pytest.fixture(name="plugin_data", scope="session")
+    def fixture_plugin_data(self) -> dict[str, Any]:
+        """A required testing hook that allows data generation
 
         Returns:
-            The constructed provider data
+            The constructed plugin data
         """
-        return VcpkgData()
+        return {}
 
-    @pytest.fixture(name="provider_type", scope="session")
-    def fixture_provider_type(self) -> type[VcpkgProvider]:
+    @pytest.fixture(name="plugin_type", scope="session")
+    def fixture_plugin_type(self) -> type[VcpkgProvider]:
         """A required testing hook that allows type generation
 
         Returns:
