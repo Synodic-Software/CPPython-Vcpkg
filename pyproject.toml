@@ -72,6 +72,7 @@ skip_gitignore = true
 [tool.mypy]
 exclude = "__pypackages__"
 plugins = ["pydantic.mypy"]
+show_error_codes = true
 strict = true
 
 [tool.pylint.MAIN]
@@ -83,6 +84,9 @@ load-plugins = [
   "pylint.extensions.private_import",
   "pylint.extensions.bad_builtin",
 ]
+
+[tool.pylint.DESIGN]
+max-parents = 10
 
 [tool.pylint.messages_control]
 extension-pkg-whitelist = "pydantic"
