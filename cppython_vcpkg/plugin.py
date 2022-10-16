@@ -8,47 +8,10 @@ from typing import Any
 
 from cppython_core.exceptions import ProcessError
 from cppython_core.plugin_schema.provider import Provider, ProviderData
-from cppython_core.schema import CorePluginData, CPPythonModel
+from cppython_core.schema import CorePluginData
 from cppython_core.utility import subprocess_call
-from pydantic import Field, HttpUrl
-from pydantic.types import DirectoryPath
 
-
-class VcpkgDataResolved(CPPythonModel):
-    """Resolved vcpkg data"""
-
-    install_path: DirectoryPath
-    manifest_path: DirectoryPath
-
-
-class VcpkgData(CPPythonModel):
-    """vcpkg provider data"""
-
-    install_path: Path = Field(
-        default=Path("build"),
-        alias="install-path",
-        description="The referenced dependencies defined by the local vcpkg.json manifest file",
-    )
-
-    manifest_path: Path = Field(
-        default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
-    )
-
-
-class VcpkgDependency(CPPythonModel):
-    """Vcpkg dependency type"""
-
-    name: str
-
-
-class Manifest(CPPythonModel):
-    """The manifest schema"""
-
-    name: str
-
-    version: str
-    homepage: HttpUrl | None = Field(default=None)
-    dependencies: list[VcpkgDependency] = Field(default=[])
+from cppython_vcpkg.resolution import generate_manifest, resolve_vcpkg_data
 
 
 class VcpkgProvider(Provider):
@@ -58,35 +21,7 @@ class VcpkgProvider(Provider):
         super().__init__(group_data, core_data)
 
         # Default the provider data
-        self.data = self._resolve_data(VcpkgData())
-
-    def _resolve_data(self, data: VcpkgData) -> VcpkgDataResolved:
-        """_summary_
-
-        Args:
-            data: _description_
-
-        Returns:
-            _description_
-        """
-
-        root_directory = self.core_data.project_data.pyproject_file.parent.absolute()
-
-        modified_install_path = data.install_path
-        modified_manifest_path = data.manifest_path
-
-        # Add the project location to all relative paths
-        if not modified_install_path.is_absolute():
-            modified_install_path = root_directory / modified_install_path
-
-        if not modified_manifest_path.is_absolute():
-            modified_manifest_path = root_directory / modified_manifest_path
-
-        # Create directories
-        modified_install_path.mkdir(parents=True, exist_ok=True)
-        modified_manifest_path.mkdir(parents=True, exist_ok=True)
-
-        return VcpkgDataResolved(install_path=modified_install_path, manifest_path=modified_manifest_path)
+        self.data = resolve_vcpkg_data({}, core_data)
 
     @classmethod
     def _update_provider(cls, path: Path) -> None:
@@ -107,25 +42,6 @@ class VcpkgProvider(Provider):
             cls.logger().error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
-    def _extract_manifest(self) -> Manifest:
-        """From the input configuration data, construct a Vcpkg specific Manifest type
-
-        Returns:
-            The manifest
-        """
-        base_dependencies = self.core_data.cppython_data.dependencies
-
-        vcpkg_dependencies: list[VcpkgDependency] = []
-        for dependency in base_dependencies:
-            vcpkg_dependency = VcpkgDependency(name=dependency.name)
-            vcpkg_dependencies.append(vcpkg_dependency)
-
-        return Manifest(
-            name=self.core_data.pep621_data.name,
-            version=self.core_data.pep621_data.version,
-            dependencies=vcpkg_dependencies,
-        )
-
     @staticmethod
     def name() -> str:
         """The string that is matched with the [tool.cppython.provider] string
@@ -142,9 +58,7 @@ class VcpkgProvider(Provider):
             data: _description_
         """
 
-        input_data = VcpkgData(**data)
-
-        self.data = self._resolve_data(input_data)
+        self.data = resolve_vcpkg_data(data, self.core_data)
 
     def supports_generator(self, name: str) -> bool:
         """_summary_
@@ -165,7 +79,7 @@ class VcpkgProvider(Provider):
         return None
 
     @classmethod
-    def tooling_downloaded(cls, path: DirectoryPath) -> bool:
+    def tooling_downloaded(cls, path: Path) -> bool:
         """Returns whether the provider tooling needs to be downloaded
 
         Args:
@@ -193,7 +107,7 @@ class VcpkgProvider(Provider):
         return True
 
     @classmethod
-    async def download_tooling(cls, path: DirectoryPath) -> None:
+    async def download_tooling(cls, path: Path) -> None:
         """Installs the external tooling required by the provider
 
         Args:
@@ -234,7 +148,7 @@ class VcpkgProvider(Provider):
             ProcessError: Failed vcpkg calls
         """
         manifest_path = self.data.manifest_path
-        manifest = self._extract_manifest()
+        manifest = generate_manifest(self.core_data)
 
         # Write out the manifest
         serialized = json.loads(manifest.json(exclude_none=True))
@@ -265,7 +179,7 @@ class VcpkgProvider(Provider):
             ProcessError: Failed vcpkg calls
         """
         manifest_path = self.data.manifest_path
-        manifest = self._extract_manifest()
+        manifest = generate_manifest(self.core_data)
 
         # Write out the manifest
         serialized = json.loads(manifest.json(exclude_none=True))
