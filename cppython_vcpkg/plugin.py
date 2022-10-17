@@ -85,6 +85,8 @@ class VcpkgProvider(Provider):
             The synch data object
         """
 
+        assert name == "cmake"
+
         toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
 
         return SyncData(name=self.name(), data=toolchain_file)
