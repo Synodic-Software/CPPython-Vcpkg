@@ -8,7 +8,7 @@ from typing import Any
 
 from cppython_core.exceptions import ProcessError
 from cppython_core.plugin_schema.provider import Provider, ProviderData
-from cppython_core.schema import CorePluginData
+from cppython_core.schema import CorePluginData, SyncData
 from cppython_core.utility import subprocess_call
 
 from cppython_vcpkg.resolution import generate_manifest, resolve_vcpkg_data
@@ -75,8 +75,19 @@ class VcpkgProvider(Provider):
 
         return False
 
-    def gather_input(self, name: str) -> Any:
-        return None
+    def sync_data(self, name: str) -> SyncData:
+        """Gathers a data object for the given generator
+
+        Args:
+            name: The input generator token
+
+        Returns:
+            The synch data object
+        """
+
+        toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
+
+        return SyncData(name=self.name(), data=toolchain_file)
 
     @classmethod
     def tooling_downloaded(cls, path: Path) -> bool:
