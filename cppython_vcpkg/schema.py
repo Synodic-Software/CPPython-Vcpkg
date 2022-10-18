@@ -33,7 +33,7 @@ class VcpkgConfiguration(CPPythonModel):
         description="List of CMakeSettings files that will be injected with the CPPython toolchain",
     )
 
-    @validator("injection")
+    @validator("settings_files")
     @classmethod
     def validate_injection_name(cls, value: Path) -> Path:
         """Validates the path naming scheme
