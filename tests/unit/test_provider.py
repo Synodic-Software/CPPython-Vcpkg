@@ -9,6 +9,7 @@ from pytest_cppython.plugin import ProviderUnitTests
 
 from cppython_vcpkg.plugin import VcpkgProvider
 from cppython_vcpkg.resolution import generate_manifest
+from cppython_vcpkg.schema import VcpkgConfiguration
 
 
 class TestCPPythonProvider(ProviderUnitTests[VcpkgProvider]):
@@ -40,3 +41,8 @@ class TestCPPythonProvider(ProviderUnitTests[VcpkgProvider]):
         """
 
         assert generate_manifest(core_plugin_data)
+
+    def test_default_data(self) -> None:
+        """Verifies that the configuration data can be defaulted"""
+
+        assert VcpkgConfiguration()

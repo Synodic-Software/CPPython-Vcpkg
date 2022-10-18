@@ -2,8 +2,8 @@
 from pathlib import Path
 
 from cppython_core.schema import CPPythonModel
-from pydantic import Field, HttpUrl
-from pydantic.types import DirectoryPath
+from pydantic import Field, HttpUrl, validator
+from pydantic.types import DirectoryPath, FilePath
 
 
 class VcpkgData(CPPythonModel):
@@ -11,6 +11,7 @@ class VcpkgData(CPPythonModel):
 
     install_path: DirectoryPath
     manifest_path: DirectoryPath
+    settings_files: list[FilePath]
 
 
 class VcpkgConfiguration(CPPythonModel):
@@ -25,6 +26,32 @@ class VcpkgConfiguration(CPPythonModel):
     manifest_path: Path = Field(
         default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
     )
+
+    settings_files: list[FilePath] = Field(
+        default=["CMakeSettings.json"],
+        alias="settings-files",
+        description="List of CMakeSettings files that will be injected with the CPPython toolchain",
+    )
+
+    @validator("injection")
+    @classmethod
+    def validate_injection_name(cls, value: Path) -> Path:
+        """Validates the path naming scheme
+
+        Args:
+            value: The input path
+
+        Raises:
+            ValueError: If the naming doesn't conform
+
+        Returns:
+            The output path
+        """
+
+        if not value.name == "CMakeSettings.json":
+            raise ValueError("The given files must be valid 'CMakeSettings.json' files")
+
+        return value
 
 
 class VcpkgDependency(CPPythonModel):
