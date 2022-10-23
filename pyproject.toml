@@ -1,5 +1,5 @@
 [project]
-description = "A plugin for CPPython that enables vcpkg support for CMake projects"
+description = "A provider plugin for CPPython that enables vcpkg support"
 name = "cppython-vcpkg"
 
 license-expression = "MIT"
