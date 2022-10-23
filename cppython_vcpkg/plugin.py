@@ -52,22 +52,22 @@ class VcpkgProvider(Provider):
         return "vcpkg"
 
     def activate(self, data: dict[str, Any]) -> None:
-        """_summary_
+        """Called when plugin data is ready
 
         Args:
-            data: _description_
+            data: The input data table
         """
 
         self.data = resolve_vcpkg_data(data, self.core_data)
 
     def supports_generator(self, name: str) -> bool:
-        """_summary_
+        """Queries generator support
 
         Args:
-            name: _description_
+            name: The name token to check
 
         Returns:
-            _description_
+            Query result
         """
 
         if name == "cmake":

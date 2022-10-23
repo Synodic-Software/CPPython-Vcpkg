@@ -16,7 +16,7 @@ def generate_manifest(core_data: CorePluginData) -> Manifest:
     """From the input configuration data, construct a Vcpkg specific Manifest type
 
     Args:
-        core_data: _description_
+        core_data: The core data to help with the resolve
 
     Returns:
         The manifest
@@ -36,14 +36,14 @@ def generate_manifest(core_data: CorePluginData) -> Manifest:
 
 
 def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> VcpkgData:
-    """_summary_
+    """Resolves the input data table from defaults to requirements
 
     Args:
-        data: _description_
-        core_data: _description_
+        data: The input table
+        core_data: The core data to help with the resolve
 
     Returns:
-        _description_
+        The resolved data
     """
 
     parsed_data = VcpkgConfiguration(**data)
@@ -60,6 +60,8 @@ def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> Vcpkg
     if not modified_manifest_path.is_absolute():
         modified_manifest_path = root_directory / modified_manifest_path
 
+    modified_settings = [root_directory / file for file in parsed_data.settings_files if not file.is_absolute()]
+
     # Create directories
     modified_install_path.mkdir(parents=True, exist_ok=True)
     modified_manifest_path.mkdir(parents=True, exist_ok=True)
@@ -67,5 +69,5 @@ def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> Vcpkg
     return VcpkgData(
         install_path=modified_install_path,
         manifest_path=modified_manifest_path,
-        settings_files=parsed_data.settings_files,
+        settings_files=modified_settings,
     )

@@ -27,8 +27,8 @@ class VcpkgConfiguration(CPPythonModel):
         default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
     )
 
-    settings_files: list[FilePath] = Field(
-        default=["CMakeSettings.json"],
+    settings_files: list[Path] = Field(
+        default=[Path("CMakeSettings.json")],
         alias="settings-files",
         description="List of CMakeSettings files that will be injected with the CPPython toolchain",
     )
