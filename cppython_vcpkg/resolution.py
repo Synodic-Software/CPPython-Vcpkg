@@ -16,7 +16,7 @@ def generate_manifest(core_data: CorePluginData) -> Manifest:
     """From the input configuration data, construct a Vcpkg specific Manifest type
 
     Args:
-        core_data: _description_
+        core_data: The core data to help with the resolve
 
     Returns:
         The manifest
@@ -36,14 +36,14 @@ def generate_manifest(core_data: CorePluginData) -> Manifest:
 
 
 def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> VcpkgData:
-    """_summary_
+    """Resolves the input data table from defaults to requirements
 
     Args:
-        data: _description_
-        core_data: _description_
+        data: The input table
+        core_data: The core data to help with the resolve
 
     Returns:
-        _description_
+        The resolved data
     """
 
     parsed_data = VcpkgConfiguration(**data)
