@@ -60,14 +60,8 @@ def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> Vcpkg
     if not modified_manifest_path.is_absolute():
         modified_manifest_path = root_directory / modified_manifest_path
 
-    modified_settings = [root_directory / file for file in parsed_data.settings_files if not file.is_absolute()]
-
     # Create directories
     modified_install_path.mkdir(parents=True, exist_ok=True)
     modified_manifest_path.mkdir(parents=True, exist_ok=True)
 
-    return VcpkgData(
-        install_path=modified_install_path,
-        manifest_path=modified_manifest_path,
-        settings_files=modified_settings,
-    )
+    return VcpkgData(install_path=modified_install_path, manifest_path=modified_manifest_path)
