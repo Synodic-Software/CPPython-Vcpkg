@@ -12,7 +12,7 @@ readme = "README.md"
 
 dynamic = ["version"]
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
   "cppython-core>=0.3.3.dev0",
