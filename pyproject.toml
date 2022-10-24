@@ -2,7 +2,7 @@
 description = "A provider plugin for CPPython that enables vcpkg support"
 name = "cppython-vcpkg"
 
-license-expression = "MIT"
+license = "MIT"
 
 authors = [
   {name = "Synodic Software", email = "contact@synodic.software"},
@@ -25,7 +25,6 @@ paths = ["LICENSE.md"]
 homepage = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 repository = "https://github.com/Synodic-Software/CPPython-Vcpkg"
 
-[project.optional-dependencies]
 [tool.pdm]
 version = {use_scm = true}
 
