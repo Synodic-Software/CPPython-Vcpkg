@@ -6,7 +6,7 @@ from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Any
 
-from cppython_core.exceptions import ProcessError
+from cppython_core.exceptions import NotSupportedError, ProcessError
 from cppython_core.plugin_schema.provider import Provider, ProviderData
 from cppython_core.schema import CorePluginData, SyncData
 from cppython_core.utility import subprocess_call
@@ -60,32 +60,21 @@ class VcpkgProvider(Provider):
 
         self.data = resolve_vcpkg_data(data, self.core_data)
 
-    def supports_generator(self, name: str) -> bool:
-        """Queries generator support
-
-        Args:
-            name: The name token to check
-
-        Returns:
-            Query result
-        """
-
-        if name == "cmake":
-            return True
-
-        return False
-
-    def sync_data(self, name: str) -> SyncData:
+    def sync_data(self, generator_name: str) -> SyncData:
         """Gathers a data object for the given generator
 
         Args:
-            name: The input generator token
+            generator_name: The input generator token
+
+        Raises:
+            NotSupportedError: If not supported
 
         Returns:
             The synch data object
         """
 
-        assert name == "cmake"
+        if generator_name != "cmake":
+            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the '{self.name()}' plugin")
 
         toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
 
