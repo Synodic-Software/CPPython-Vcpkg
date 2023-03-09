@@ -17,12 +17,6 @@ from cppython_vcpkg.resolution import generate_manifest, resolve_vcpkg_data
 class VcpkgProvider(Provider):
     """vcpkg Provider"""
 
-    def __init__(self, group_data: ProviderData, core_data: CorePluginData) -> None:
-        super().__init__(group_data, core_data)
-
-        # Default the provider data
-        self.data = resolve_vcpkg_data({}, core_data)
-
     @classmethod
     def _update_provider(cls, path: Path) -> None:
         """Calls the vcpkg tool install script
@@ -42,23 +36,24 @@ class VcpkgProvider(Provider):
             cls.logger().error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
-    @staticmethod
-    def name() -> str:
-        """The string that is matched with the [tool.cppython.provider] string
-
-        Returns:
-            Plugin name
-        """
-        return "vcpkg"
-
-    def activate(self, data: dict[str, Any]) -> None:
+    def configure(self, group_data: ProviderData, core_data: CorePluginData) -> None:
         """Called when plugin data is ready
 
         Args:
             data: The input data table
         """
 
-        self.data = resolve_vcpkg_data(data, self.core_data)
+        self.group_data = group_data
+        self.core_data = core_data
+
+    def activate(self, configuration_data: dict[str, Any]) -> None:
+        """Called when plugin data is ready
+
+        Args:
+            configuration_data: The input data table
+        """
+
+        self.data = resolve_vcpkg_data(configuration_data, self.core_data)
 
     def sync_data(self, generator_name: str) -> SyncData:
         """Gathers a data object for the given generator
@@ -74,11 +69,11 @@ class VcpkgProvider(Provider):
         """
 
         if generator_name != "cmake":
-            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the '{self.name()}' plugin")
+            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the 'vcpkg' plugin")
 
         toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
 
-        return SyncData(name=self.name(), data=toolchain_file)
+        return SyncData(provider_name="vcpkg")
 
     @classmethod
     def tooling_downloaded(cls, path: Path) -> bool:
