@@ -1,36 +1,47 @@
 """Definitions for the plugin"""
 from pathlib import Path
 
-from cppython_core.schema import CPPythonModel
-from pydantic import Field, HttpUrl
+from cppython_core.schema import CPPythonModel, SyncData
+from pydantic import Field, FilePath, HttpUrl
 from pydantic.types import DirectoryPath
 
 
-class VcpkgData(CPPythonModel):
-    """Resolved vcpkg data"""
+class VcpkgSyncData(SyncData):
+    """Vcpkg sync type"""
 
-    install_path: DirectoryPath
-    manifest_path: DirectoryPath
-
-
-class VcpkgConfiguration(CPPythonModel):
-    """vcpkg provider data"""
-
-    install_path: Path = Field(
-        default=Path("build"),
-        alias="install-path",
-        description="The referenced dependencies defined by the local vcpkg.json manifest file",
-    )
-
-    manifest_path: Path = Field(
-        default=Path(), alias="manifest-path", description="The directory to store the manifest file, vcpkg.json"
-    )
+    toolchain: FilePath
 
 
 class VcpkgDependency(CPPythonModel):
     """Vcpkg dependency type"""
 
     name: str
+
+
+class VcpkgData(CPPythonModel):
+    """Resolved vcpkg data"""
+
+    install_directory: DirectoryPath
+    manifest_directory: DirectoryPath
+    dependencies: list[VcpkgDependency]
+
+
+class VcpkgConfiguration(CPPythonModel):
+    """vcpkg provider data"""
+
+    install_directory: Path = Field(
+        default=Path("build"),
+        alias="install-directory",
+        description="The referenced dependencies defined by the local vcpkg.json manifest file",
+    )
+
+    manifest_directory: Path = Field(
+        default=Path(), alias="manifest-directory", description="The directory to store the manifest file, vcpkg.json"
+    )
+
+    dependencies: list[VcpkgDependency] = Field(
+        default=[], description="The directory to store the manifest file, vcpkg.json"
+    )
 
 
 class Manifest(CPPythonModel):
