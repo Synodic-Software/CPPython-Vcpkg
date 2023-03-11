@@ -2,26 +2,51 @@
 """
 
 import json
+from logging import getLogger
 from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Any
 
 from cppython_core.exceptions import NotSupportedError, ProcessError
-from cppython_core.plugin_schema.provider import Provider, ProviderData
-from cppython_core.schema import CorePluginData, SyncData
+from cppython_core.plugin_schema.provider import Provider, ProviderGroupData
+from cppython_core.schema import CorePluginData, Information
 from cppython_core.utility import subprocess_call
 
 from cppython_vcpkg.resolution import generate_manifest, resolve_vcpkg_data
+from cppython_vcpkg.schema import VcpkgData, VcpkgSyncData
 
 
 class VcpkgProvider(Provider):
     """vcpkg Provider"""
 
-    def __init__(self, group_data: ProviderData, core_data: CorePluginData) -> None:
-        super().__init__(group_data, core_data)
+    def __init__(
+        self, group_data: ProviderGroupData, core_data: CorePluginData, configuration_data: dict[str, Any]
+    ) -> None:
+        self.group_data: ProviderGroupData = group_data
+        self.core_data: CorePluginData = core_data
+        self.data: VcpkgData = resolve_vcpkg_data(configuration_data, core_data)
 
-        # Default the provider data
-        self.data = resolve_vcpkg_data({}, core_data)
+    @staticmethod
+    def supported(directory: Path) -> bool:
+        """Queries vcpkg support
+
+        Args:
+            directory: The directory to query
+
+        Returns:
+            Support
+        """
+
+        return True
+
+    @staticmethod
+    def information() -> Information:
+        """Returns plugin information
+
+        Returns:
+            Plugin information
+        """
+        return Information()
 
     @classmethod
     def _update_provider(cls, path: Path) -> None:
@@ -31,36 +56,18 @@ class VcpkgProvider(Provider):
             path: The path where the script is located
         """
 
+        logger = getLogger("cppython.vcpkg")
+
         try:
             if system_name == "nt":
-                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=cls.logger(), cwd=path, shell=True)
+                subprocess_call([str(WindowsPath("bootstrap-vcpkg.bat"))], logger=logger, cwd=path, shell=True)
             elif system_name == "posix":
-                subprocess_call(
-                    ["./" + str(PosixPath("bootstrap-vcpkg.sh"))], logger=cls.logger(), cwd=path, shell=True
-                )
+                subprocess_call(["./" + str(PosixPath("bootstrap-vcpkg.sh"))], logger=logger, cwd=path, shell=True)
         except ProcessError:
-            cls.logger().error("Unable to bootstrap the vcpkg repository", exc_info=True)
+            logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
-    @staticmethod
-    def name() -> str:
-        """The string that is matched with the [tool.cppython.provider] string
-
-        Returns:
-            Plugin name
-        """
-        return "vcpkg"
-
-    def activate(self, data: dict[str, Any]) -> None:
-        """Called when plugin data is ready
-
-        Args:
-            data: The input data table
-        """
-
-        self.data = resolve_vcpkg_data(data, self.core_data)
-
-    def sync_data(self, generator_name: str) -> SyncData:
+    def sync_data(self, generator_name: str) -> VcpkgSyncData:
         """Gathers a data object for the given generator
 
         Args:
@@ -74,11 +81,11 @@ class VcpkgProvider(Provider):
         """
 
         if generator_name != "cmake":
-            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the '{self.name()}' plugin")
+            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the 'vcpkg' plugin")
 
         toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
 
-        return SyncData(name=self.name(), data=toolchain_file)
+        return VcpkgSyncData(provider_name="vcpkg", toolchain=toolchain_file)
 
     @classmethod
     def tooling_downloaded(cls, path: Path) -> bool:
@@ -94,11 +101,13 @@ class VcpkgProvider(Provider):
             Whether the tooling has been downloaded or not
         """
 
+        logger = getLogger("cppython.vcpkg")
+
         try:
             # Hide output, given an error output is a logic conditional
             subprocess_call(
                 ["git", "rev-parse", "--is-inside-work-tree"],
-                logger=cls.logger(),
+                logger=logger,
                 suppress=True,
                 cwd=path,
             )
@@ -118,7 +127,7 @@ class VcpkgProvider(Provider):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        logger = cls.logger()
+        logger = getLogger("cppython.vcpkg")
 
         if cls.tooling_downloaded(path):
             try:
@@ -149,23 +158,23 @@ class VcpkgProvider(Provider):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_path = self.data.manifest_path
-        manifest = generate_manifest(self.core_data)
+        manifest_directory = self.data.manifest_directory
+        manifest = generate_manifest(self.core_data, self.data)
 
         # Write out the manifest
         serialized = json.loads(manifest.json(exclude_none=True))
-        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+        with open(manifest_directory / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
         executable = self.core_data.cppython_data.install_path / "vcpkg"
-        logger = self.logger()
+        logger = getLogger("cppython.vcpkg")
         try:
             subprocess_call(
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.data.install_path}",
-                    f"--x-manifest-root={self.data.manifest_path}",
+                    f"--x-install-root={self.data.install_directory}",
+                    f"--x-manifest-root={self.data.manifest_directory}",
                 ],
                 logger=logger,
                 cwd=self.core_data.cppython_data.build_path,
@@ -180,23 +189,23 @@ class VcpkgProvider(Provider):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_path = self.data.manifest_path
-        manifest = generate_manifest(self.core_data)
+        manifest_directory = self.data.manifest_directory
+        manifest = generate_manifest(self.core_data, self.data)
 
         # Write out the manifest
         serialized = json.loads(manifest.json(exclude_none=True))
-        with open(manifest_path / "vcpkg.json", "w", encoding="utf8") as file:
+        with open(manifest_directory / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
         executable = self.core_data.cppython_data.install_path / "vcpkg"
-        logger = self.logger()
+        logger = getLogger("cppython.vcpkg")
         try:
             subprocess_call(
                 [
                     executable,
                     "install",
-                    f"--x-install-root={self.data.install_path}",
-                    f"--x-manifest-root={self.data.manifest_path}",
+                    f"--x-install-root={self.data.install_directory}",
+                    f"--x-manifest-root={self.data.manifest_directory}",
                 ],
                 logger=logger,
                 cwd=self.core_data.cppython_data.build_path,
