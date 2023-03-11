@@ -4,7 +4,6 @@
 from typing import Any
 
 import pytest
-from cppython_core.schema import CorePluginData
 from pytest_cppython.plugin import ProviderUnitTests
 
 from cppython_vcpkg.plugin import VcpkgProvider
