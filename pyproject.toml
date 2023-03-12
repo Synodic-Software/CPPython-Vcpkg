@@ -15,7 +15,8 @@ dynamic = ["version"]
 requires-python = ">=3.11"
 
 dependencies = [
-  "cppython-core>=0.3.3.dev0",
+    "cppython-core>=0.3.3.dev0",
+    "cppython-cmake>=0.1.0.dev12",
 ]
 
 [project.license-files]

@@ -7,13 +7,16 @@ from os import name as system_name
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Any
 
+from cppython_cmake.plugin import CMakeGenerator
+from cppython_cmake.schema import CMakeSyncData
 from cppython_core.exceptions import NotSupportedError, ProcessError
+from cppython_core.plugin_schema.generator import SyncConsumer
 from cppython_core.plugin_schema.provider import Provider, ProviderGroupData
-from cppython_core.schema import CorePluginData, Information
+from cppython_core.schema import CorePluginData, Information, PluginName, SyncData
 from cppython_core.utility import subprocess_call
 
 from cppython_vcpkg.resolution import generate_manifest, resolve_vcpkg_data
-from cppython_vcpkg.schema import VcpkgData, VcpkgSyncData
+from cppython_vcpkg.schema import VcpkgData
 
 
 class VcpkgProvider(Provider):
@@ -38,6 +41,19 @@ class VcpkgProvider(Provider):
         """
 
         return True
+
+    @staticmethod
+    def supported_sync_type(sync_type: type[SyncData]) -> bool:
+        """_summary_
+
+        Args:
+            sync_type: _description_
+
+        Returns:
+            _description_
+        """
+
+        return sync_type in CMakeGenerator.sync_types()
 
     @staticmethod
     def information() -> Information:
@@ -67,11 +83,11 @@ class VcpkgProvider(Provider):
             logger.error("Unable to bootstrap the vcpkg repository", exc_info=True)
             raise
 
-    def sync_data(self, generator_name: str) -> VcpkgSyncData:
+    def sync_data(self, consumer: SyncConsumer) -> SyncData:
         """Gathers a data object for the given generator
 
         Args:
-            generator_name: The input generator token
+            consumer: The input consumer
 
         Raises:
             NotSupportedError: If not supported
@@ -80,12 +96,12 @@ class VcpkgProvider(Provider):
             The synch data object
         """
 
-        if generator_name != "cmake":
-            raise NotSupportedError(f"The generator '{generator_name}' is not supported by the 'vcpkg' plugin")
+        for sync_type in consumer.sync_types():
+            if sync_type == CMakeSyncData:
+                toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
+                return CMakeSyncData(provider_name=PluginName("vcpkg"), toolchain=toolchain_file)
 
-        toolchain_file = self.core_data.cppython_data.install_path / "scripts/buildsystems/vcpkg.cmake"
-
-        return VcpkgSyncData(provider_name="vcpkg", toolchain=toolchain_file)
+        raise NotSupportedError("OOF")
 
     @classmethod
     def tooling_downloaded(cls, path: Path) -> bool:
