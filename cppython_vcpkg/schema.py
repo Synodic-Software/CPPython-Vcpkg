@@ -1,7 +1,7 @@
 """Definitions for the plugin"""
 from pathlib import Path
 
-from cppython_core.schema import CPPythonModel, SyncData
+from cppython_core.schema import CPPythonModel
 from pydantic import Field, HttpUrl
 from pydantic.types import DirectoryPath
 
