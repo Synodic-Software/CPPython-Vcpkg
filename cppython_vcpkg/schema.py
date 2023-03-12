@@ -1,15 +1,9 @@
 """Definitions for the plugin"""
 from pathlib import Path
 
-from cppython_core.schema import CPPythonModel, SyncData
-from pydantic import Field, FilePath, HttpUrl
+from cppython_core.schema import CPPythonModel
+from pydantic import Field, HttpUrl
 from pydantic.types import DirectoryPath
-
-
-class VcpkgSyncData(SyncData):
-    """Vcpkg sync type"""
-
-    toolchain: FilePath
 
 
 class VcpkgDependency(CPPythonModel):
