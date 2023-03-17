@@ -23,11 +23,13 @@ def generate_manifest(core_data: CorePluginData, data: VcpkgData) -> Manifest:
         The manifest
     """
 
-    return Manifest(
-        name=core_data.pep621_data.name,
-        version=core_data.pep621_data.version,
-        dependencies=data.dependencies,
-    )
+    manifest = {
+        "name": core_data.pep621_data.name,
+        "version_string": core_data.pep621_data.version,
+        "dependencies": data.dependencies,
+    }
+
+    return Manifest(**manifest)
 
 
 def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> VcpkgData:

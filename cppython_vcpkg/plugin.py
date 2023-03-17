@@ -178,7 +178,7 @@ class VcpkgProvider(Provider):
         manifest = generate_manifest(self.core_data, self.data)
 
         # Write out the manifest
-        serialized = json.loads(manifest.json(exclude_none=True))
+        serialized = json.loads(manifest.json(exclude_none=True, by_alias=True))
         with open(manifest_directory / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 

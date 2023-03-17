@@ -41,8 +41,8 @@ class VcpkgConfiguration(CPPythonModel):
 class Manifest(CPPythonModel):
     """The manifest schema"""
 
-    name: str
+    name: str = Field(description="The project name")
 
-    version: str
-    homepage: HttpUrl | None = Field(default=None)
-    dependencies: list[VcpkgDependency] = Field(default=[])
+    version_string: str = Field(default="", alias="version-string", description="The arbitrary version string")
+    homepage: HttpUrl | None = Field(default=None, description="Homepage URL")
+    dependencies: list[VcpkgDependency] = Field(default=[], description="List of dependencies")
