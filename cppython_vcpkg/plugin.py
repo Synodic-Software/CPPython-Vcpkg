@@ -151,7 +151,7 @@ class VcpkgProvider(Provider):
                 subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
                 subprocess_call(["git", "pull"], logger=logger, cwd=path)
             except ProcessError:
-                logger.error("Unable to update the vcpkg repository", exc_info=True)
+                logger.exception("Unable to update the vcpkg repository")
                 raise
         else:
             try:
@@ -163,7 +163,7 @@ class VcpkgProvider(Provider):
                 )
 
             except ProcessError:
-                logger.error("Unable to clone the vcpkg repository", exc_info=True)
+                logger.exception("Unable to clone the vcpkg repository")
                 raise
 
         cls._update_provider(path)
@@ -196,7 +196,7 @@ class VcpkgProvider(Provider):
                 cwd=self.core_data.cppython_data.build_path,
             )
         except ProcessError:
-            logger.error("Unable to install project dependencies", exc_info=True)
+            logger.exception("Unable to install project dependencies")
             raise
 
     def update(self) -> None:
@@ -227,5 +227,5 @@ class VcpkgProvider(Provider):
                 cwd=self.core_data.cppython_data.build_path,
             )
         except ProcessError:
-            logger.error("Unable to install project dependencies", exc_info=True)
+            logger.exception("Unable to install project dependencies")
             raise

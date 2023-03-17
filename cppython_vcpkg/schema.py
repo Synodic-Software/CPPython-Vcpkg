@@ -30,7 +30,7 @@ class VcpkgConfiguration(CPPythonModel):
     )
 
     manifest_directory: Path = Field(
-        default=Path(), alias="manifest-directory", description="The directory to store the manifest file, vcpkg.json"
+        default=Path(), alias="manifest-directory", description="The directory to store the manifest file, 'vcpkg.json'"
     )
 
     dependencies: list[VcpkgDependency] = Field(
