@@ -23,11 +23,13 @@ def generate_manifest(core_data: CorePluginData, data: VcpkgData) -> Manifest:
         The manifest
     """
 
-    return Manifest(
-        name=core_data.pep621_data.name,
-        version=core_data.pep621_data.version,
-        dependencies=data.dependencies,
-    )
+    manifest = {
+        "name": core_data.pep621_data.name,
+        "version_string": core_data.pep621_data.version,
+        "dependencies": data.dependencies,
+    }
+
+    return Manifest(**manifest)
 
 
 def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> VcpkgData:
@@ -46,18 +48,13 @@ def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> Vcpkg
     root_directory = core_data.project_data.pyproject_file.parent.absolute()
 
     modified_install_directory = parsed_data.install_directory
-    modified_manifest_directory = parsed_data.manifest_directory
 
     # Add the project location to all relative paths
     if not modified_install_directory.is_absolute():
         modified_install_directory = root_directory / modified_install_directory
 
-    if not modified_manifest_directory.is_absolute():
-        modified_manifest_directory = root_directory / modified_manifest_directory
-
     # Create directories
     modified_install_directory.mkdir(parents=True, exist_ok=True)
-    modified_manifest_directory.mkdir(parents=True, exist_ok=True)
 
     vcpkg_dependencies: list[VcpkgDependency] = []
     for dependency in parsed_data.dependencies:
@@ -66,6 +63,5 @@ def resolve_vcpkg_data(data: dict[str, Any], core_data: CorePluginData) -> Vcpkg
 
     return VcpkgData(
         install_directory=modified_install_directory,
-        manifest_directory=modified_manifest_directory,
         dependencies=vcpkg_dependencies,
     )

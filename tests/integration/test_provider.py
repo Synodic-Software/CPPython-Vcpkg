@@ -4,7 +4,7 @@
 from typing import Any
 
 import pytest
-from pytest_cppython.plugin import ProviderIntegrationTests
+from pytest_cppython.tests import ProviderIntegrationTests
 
 from cppython_vcpkg.plugin import VcpkgProvider
 

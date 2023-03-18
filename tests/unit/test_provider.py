@@ -4,7 +4,7 @@
 from typing import Any
 
 import pytest
-from pytest_cppython.plugin import ProviderUnitTests
+from pytest_cppython.tests import ProviderUnitTests
 
 from cppython_vcpkg.plugin import VcpkgProvider
 from cppython_vcpkg.resolution import generate_manifest
