@@ -39,8 +39,8 @@ class VcpkgProvider(Provider):
         Returns:
             Support
         """
-
-        return True
+        file = directory / "vcpkg.json"
+        return file.exists()
 
     @staticmethod
     def supported_sync_type(sync_type: type[SyncData]) -> bool:
@@ -174,7 +174,8 @@ class VcpkgProvider(Provider):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_directory = self.data.manifest_directory
+
+        manifest_directory = self.core_data.project_data.pyproject_file.parent
         manifest = generate_manifest(self.core_data, self.data)
 
         # Write out the manifest
@@ -190,7 +191,6 @@ class VcpkgProvider(Provider):
                     executable,
                     "install",
                     f"--x-install-root={self.data.install_directory}",
-                    f"--x-manifest-root={self.data.manifest_directory}",
                 ],
                 logger=logger,
                 cwd=self.core_data.cppython_data.build_path,
@@ -205,11 +205,11 @@ class VcpkgProvider(Provider):
         Raises:
             ProcessError: Failed vcpkg calls
         """
-        manifest_directory = self.data.manifest_directory
+        manifest_directory = self.core_data.project_data.pyproject_file.parent
         manifest = generate_manifest(self.core_data, self.data)
 
         # Write out the manifest
-        serialized = json.loads(manifest.json(exclude_none=True))
+        serialized = json.loads(manifest.json(exclude_none=True, by_alias=True))
         with open(manifest_directory / "vcpkg.json", "w", encoding="utf8") as file:
             json.dump(serialized, file, ensure_ascii=False, indent=4)
 
@@ -221,7 +221,6 @@ class VcpkgProvider(Provider):
                     executable,
                     "install",
                     f"--x-install-root={self.data.install_directory}",
-                    f"--x-manifest-root={self.data.manifest_directory}",
                 ],
                 logger=logger,
                 cwd=self.core_data.cppython_data.build_path,

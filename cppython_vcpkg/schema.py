@@ -16,7 +16,6 @@ class VcpkgData(CPPythonModel):
     """Resolved vcpkg data"""
 
     install_directory: DirectoryPath
-    manifest_directory: DirectoryPath
     dependencies: list[VcpkgDependency]
 
 
@@ -27,10 +26,6 @@ class VcpkgConfiguration(CPPythonModel):
         default=Path("build"),
         alias="install-directory",
         description="The referenced dependencies defined by the local vcpkg.json manifest file",
-    )
-
-    manifest_directory: Path = Field(
-        default=Path(), alias="manifest-directory", description="The directory to store the manifest file, 'vcpkg.json'"
     )
 
     dependencies: list[VcpkgDependency] = Field(
