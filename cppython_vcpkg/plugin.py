@@ -11,7 +11,11 @@ from cppython_cmake.plugin import CMakeGenerator
 from cppython_cmake.schema import CMakeSyncData
 from cppython_core.exceptions import NotSupportedError, ProcessError
 from cppython_core.plugin_schema.generator import SyncConsumer
-from cppython_core.plugin_schema.provider import Provider, ProviderGroupData
+from cppython_core.plugin_schema.provider import (
+    Provider,
+    ProviderPluginGroupData,
+    SupportedProviderFeatures,
+)
 from cppython_core.schema import CorePluginData, Information, PluginName, SyncData
 from cppython_core.utility import subprocess_call
 
@@ -23,24 +27,23 @@ class VcpkgProvider(Provider):
     """vcpkg Provider"""
 
     def __init__(
-        self, group_data: ProviderGroupData, core_data: CorePluginData, configuration_data: dict[str, Any]
+        self, group_data: ProviderPluginGroupData, core_data: CorePluginData, configuration_data: dict[str, Any]
     ) -> None:
-        self.group_data: ProviderGroupData = group_data
+        self.group_data: ProviderPluginGroupData = group_data
         self.core_data: CorePluginData = core_data
         self.data: VcpkgData = resolve_vcpkg_data(configuration_data, core_data)
 
     @staticmethod
-    def supported(directory: Path) -> bool:
+    def features(directory: Path) -> SupportedProviderFeatures:
         """Queries vcpkg support
 
         Args:
             directory: The directory to query
 
         Returns:
-            Support
+            Supported features
         """
-        file = directory / "vcpkg.json"
-        return file.exists()
+        return SupportedProviderFeatures()
 
     @staticmethod
     def supported_sync_type(sync_type: type[SyncData]) -> bool:
@@ -134,22 +137,22 @@ class VcpkgProvider(Provider):
         return True
 
     @classmethod
-    async def download_tooling(cls, path: Path) -> None:
+    async def download_tooling(cls, directory: Path) -> None:
         """Installs the external tooling required by the provider
 
         Args:
-            path: The directory to download any extra tooling to
+            directory: The directory to download any extra tooling to
 
         Raises:
             ProcessError: Failed vcpkg calls
         """
         logger = getLogger("cppython.vcpkg")
 
-        if cls.tooling_downloaded(path):
+        if cls.tooling_downloaded(directory):
             try:
                 # The entire history is need for vcpkg 'baseline' information
-                subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=path)
-                subprocess_call(["git", "pull"], logger=logger, cwd=path)
+                subprocess_call(["git", "fetch", "origin"], logger=logger, cwd=directory)
+                subprocess_call(["git", "pull"], logger=logger, cwd=directory)
             except ProcessError:
                 logger.exception("Unable to update the vcpkg repository")
                 raise
@@ -159,14 +162,14 @@ class VcpkgProvider(Provider):
                 subprocess_call(
                     ["git", "clone", "https://github.com/microsoft/vcpkg", "."],
                     logger=logger,
-                    cwd=path,
+                    cwd=directory,
                 )
 
             except ProcessError:
                 logger.exception("Unable to clone the vcpkg repository")
                 raise
 
-        cls._update_provider(path)
+        cls._update_provider(directory)
 
     def install(self) -> None:
         """Called when dependencies need to be installed from a lock file.

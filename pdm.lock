@@ -68,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "cppython-cmake"
-version = "0.1.1.dev13"
+version = "0.1.1.dev15"
 requires_python = ">=3.11"
 summary = "A plugin for CPPython that enables a CMake generator for C++ projects"
 dependencies = [
@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "cppython-core"
-version = "0.6.1.dev57"
+version = "0.6.1.dev63"
 requires_python = ">=3.11"
 summary = "Data definitions for CPPython"
 dependencies = [
@@ -204,7 +204,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-cppython"
-version = "0.3.1.dev37"
+version = "0.3.1.dev40"
 requires_python = ">=3.11"
 summary = "A pytest plugin that imports CPPython testing types"
 dependencies = [
@@ -359,13 +359,13 @@ content_hash = "sha256:11671e074ab899d5a346983a35bc62f957fad6a21620900951a1d3de2
     {url = "https://files.pythonhosted.org/packages/e5/d4/d8ee18c995b806b3d0d38dc17ab5888de148244da5be8d3dfbd7cea6cd7e/coverage-7.2.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:299bc75cb2a41e6741b5e470b8c9fb78d931edbd0cd009c58e5c84de57c06731"},
     {url = "https://files.pythonhosted.org/packages/f5/6f/7811ed60d4088b6a54bb48d57b48f647e55c876ee9088e3fa123eb879673/coverage-7.2.2-cp311-cp311-win_amd64.whl", hash = "sha256:92ebc1619650409da324d001b3a36f14f63644c7f0a588e331f3b0f67491f512"},
 ]
-"cppython-cmake 0.1.1.dev13" = [
-    {url = "https://files.pythonhosted.org/packages/39/02/a08c4070e50f1e4e1e3af817009fcf5455b7d2d9d25f829133b109d38ccd/cppython-cmake-0.1.1.dev13.tar.gz", hash = "sha256:731fcacb73544721f82064f268293c9fe2f2ed2247b831ec770c705c76104da1"},
-    {url = "https://files.pythonhosted.org/packages/5b/dc/6264153a36ee281ad8859d2cfed462a63be35f29e7eabd80fcb48b0f0f98/cppython_cmake-0.1.1.dev13-py3-none-any.whl", hash = "sha256:e9456bec636a7bdf1676d5d95bd05c926e66e3772da7da5b826dc2cca8518208"},
+"cppython-cmake 0.1.1.dev15" = [
+    {url = "https://files.pythonhosted.org/packages/d5/c5/6178752b712cba6225d0a6d0bb614ff012ef2d693738a4a118ac3f9e124d/cppython_cmake-0.1.1.dev15-py3-none-any.whl", hash = "sha256:8892e35f94475a08bfd0942929b7189c051fc2d7dd124bb54505117c0689eb85"},
+    {url = "https://files.pythonhosted.org/packages/de/55/2b0e9c97b123ef415970087d3d886a00c70f4f80cb4f9d4af12c42ce4520/cppython-cmake-0.1.1.dev15.tar.gz", hash = "sha256:c4dc27b2950664035616ec0793659b3414cf9194e3cdd0e4972cc4ee9a356a95"},
 ]
-"cppython-core 0.6.1.dev57" = [
-    {url = "https://files.pythonhosted.org/packages/04/0f/2936cf8c297bff7755afb491b9b8fea62267d3f86457f68eeca73adac68e/cppython_core-0.6.1.dev57-py3-none-any.whl", hash = "sha256:00367649451652f0e07eec86c61751c870c40e527dccc80c2b0fbee541962509"},
-    {url = "https://files.pythonhosted.org/packages/bb/36/779b0168af1831fae3ec6d489dec05d6e9500ea3db933cd101834f8fe2c0/cppython-core-0.6.1.dev57.tar.gz", hash = "sha256:8748fc1905b1017b8624a11b509b62f6cf5d2b6a0c16341ac20c399455b5b4ef"},
+"cppython-core 0.6.1.dev63" = [
+    {url = "https://files.pythonhosted.org/packages/92/be/0672bd329224471399772f69cbd2c0507888bcbf9d9b8f6e3caf96e3c8de/cppython-core-0.6.1.dev63.tar.gz", hash = "sha256:291dfd1ca7b2af407a5121c24f1fac0460db1c5e27e706d6d33cc203f4a7f3dd"},
+    {url = "https://files.pythonhosted.org/packages/a4/ca/4973a411d8b9f6ff3b2c518197d1d279135de9ed2965e1f9554e88782cbf/cppython_core-0.6.1.dev63-py3-none-any.whl", hash = "sha256:7808263ded9e350c0650b0c7fc4ddf3ea4cb528433de2789fc72df5931a9f96f"},
 ]
 "dill 0.3.6" = [
     {url = "https://files.pythonhosted.org/packages/7c/e7/364a09134e1062d4d5ff69b853a56cf61c223e0afcc6906b6832bcd51ea8/dill-0.3.6.tar.gz", hash = "sha256:e5db55f3687856d8fbdab002ed78544e1c4559a130302693d839dfe8f93f2373"},
@@ -519,9 +519,9 @@ content_hash = "sha256:11671e074ab899d5a346983a35bc62f957fad6a21620900951a1d3de2
     {url = "https://files.pythonhosted.org/packages/ea/70/da97fd5f6270c7d2ce07559a19e5bf36a76f0af21500256f005a69d9beba/pytest-cov-4.0.0.tar.gz", hash = "sha256:996b79efde6433cdbd0088872dbc5fb3ed7fe1578b68cdbba634f14bb8dd0470"},
     {url = "https://files.pythonhosted.org/packages/fe/1f/9ec0ddd33bd2b37d6ec50bb39155bca4fe7085fa78b3b434c05459a860e3/pytest_cov-4.0.0-py3-none-any.whl", hash = "sha256:2feb1b751d66a8bd934e5edfa2e961d11309dc37b73b0eabe73b5945fee20f6b"},
 ]
-"pytest-cppython 0.3.1.dev37" = [
-    {url = "https://files.pythonhosted.org/packages/7e/ba/770d3c25b7ce62b13a69644ffa7e10b7d5e9bca244ddec5293d2b9508318/pytest-cppython-0.3.1.dev37.tar.gz", hash = "sha256:859bcf12722475ac4d86e99cb60b024445323d9ac21ab403add3680596c43bbb"},
-    {url = "https://files.pythonhosted.org/packages/d3/f8/5670b71704c5f126b29d8852db3fb0ede8002abdb77b9834abd1bb5bf8f2/pytest_cppython-0.3.1.dev37-py3-none-any.whl", hash = "sha256:c069c56aae8e6eb52204ed2f0802e79e5fc4b84f003f3500e0990244518c8d32"},
+"pytest-cppython 0.3.1.dev40" = [
+    {url = "https://files.pythonhosted.org/packages/20/f0/fa78d72b97850a1995ba881fddd7c5bb85a724e27f968daa20643aa5bec7/pytest_cppython-0.3.1.dev40-py3-none-any.whl", hash = "sha256:92e30c36dc7362f935ce11df0afbef73116c728b0ad25d0df8e8a09190973ba3"},
+    {url = "https://files.pythonhosted.org/packages/5d/c5/20bf4b11680660a434887f218ba623a0e6438e5c3006539a4f8f22ce60ab/pytest-cppython-0.3.1.dev40.tar.gz", hash = "sha256:cb1137a6ba78f3fdbde425b509494f71351b19eb94e2b6288f9eb255d72c1d64"},
 ]
 "pytest-mock 3.10.0" = [
     {url = "https://files.pythonhosted.org/packages/91/84/c951790e199cd54ddbf1021965b62a5415b81193ebdb4f4af2659fd06a73/pytest_mock-3.10.0-py3-none-any.whl", hash = "sha256:f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b"},

@@ -31,11 +31,11 @@ class TestCPPythonProvider(ProviderUnitTests[VcpkgProvider]):
         """
         return VcpkgProvider
 
-    def test_manifest_generation(self, plugin: VcpkgProvider) -> None:
+    def test_manifest_generation(self, data_plugin: VcpkgProvider) -> None:
         """Verifies that manifests can be generated from core data
 
         Args:
-            plugin: Generated plugin
+            data_plugin: Generated plugin
         """
 
-        assert generate_manifest(plugin.core_data, plugin.data)
+        assert generate_manifest(data_plugin.core_data, data_plugin.data)
